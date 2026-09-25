@@ -5184,11 +5184,11 @@ function sanitizePersonaDraft(content, variantKey) {
         return '⟦SO_EV_' + (guarded.length - 1) + '⟧';
     });
     const soften = (t) => t
-        .replace(/(?<![拒谢婉回])绝不/g, '一般不')
-        .replace(/(?<![服听遵屈盲跟])从不/g, '一般不')
+        .replace(/([拒谢婉回])?绝不/g, (m, pre) => pre ? m : '一般不')
+        .replace(/([服听遵屈盲跟])?从不/g, (m, pre) => pre ? m : '一般不')
         .replace(/极度/g, '很')
         .replace(/每次([^\n，。；]{0,6})都/g, '多数时候$1都')
-        .replace(/(?<!不)一定会/g, '多半会')
+        .replace(/(不)?一定会/g, (m, pre) => pre ? m : '多半会')
         .replace(/永远(?!的)/g, '一直');
     s = s.split('\n').map((line) => {
         const t = line.trimStart();
@@ -30995,8 +30995,22 @@ function sanitizeOutgoingText(s) {
     if (typeof s !== 'string' || !s) return s;
     let out = s;
     // 落单代理项：优先用引擎自带 toWellFormed()（配对的星平面字符不动、只替落单的）；缺席则用正则回退。
-    if (typeof out.toWellFormed === 'function') out = out.toWellFormed();
-    else out = out.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '�');
+    if (typeof out.toWellFormed === 'function') {
+        out = out.toWellFormed();
+    } else {
+        // 无 lookbehind 的逐码元回退:iOS 16.3 的 JSC 不支持后行断言,写了这类正则字面量整个脚本会 SyntaxError
+        let fixed = '';
+        for (let i = 0; i < out.length; i++) {
+            const cu = out.charCodeAt(i);
+            if (cu >= 0xD800 && cu <= 0xDBFF) {
+                const next = i + 1 < out.length ? out.charCodeAt(i + 1) : 0;
+                if (next >= 0xDC00 && next <= 0xDFFF) { fixed += out[i] + out[i + 1]; i++; } // 配对完整,保留
+                else fixed += '\uFFFD';
+            } else if (cu >= 0xDC00 && cu <= 0xDFFF) fixed += '\uFFFD';
+            else fixed += out[i];
+        }
+        out = fixed;
+    }
     // 控制符（保留制表/换行/回车）+ C1 + 非字符码点
     out = out.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F﷐-﷯￾￿]/g, '�');
     return out === s ? s : out;
