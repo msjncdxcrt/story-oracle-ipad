@@ -1747,10 +1747,27 @@ const ENABLE_DB_BRIDGE = true;
 // ——出站字节与 1.83.0 逐字节相同。读点：dbBridgeStripEnabled · dbBridgeAfterCommandsFirst 守卫 · 参谋条模板 / bind /
 // loadSettingsIntoForm / dbBridgeRefreshHint。单测 db-bridge-keep.test.mjs。
 const ENABLE_DB_BRIDGE_KEEP = false;
+// 🧭 下一拍建议（1.87.0；社区插件「故事神谕 · 下一拍建议」v3.7.1 并入，原作者 GitHub yacovonebeswick-art，已授权）：
+// 序列引导进行中时，在主聊天最新一条 AI 回复下方挂一张小卡——「生成建议」→ 一次模型调用给出 4~7 条玩家下一句可以发的话
+// （3 条「我」+ 1~3 条在场角色 + 0~1 条「时间」；分镜 / 转场拍 0 条「我」），点一条就【追加】进 #send_textarea（绝不代发）。
+// 运行期 opt-in 设置 nextBeatEnabled（参谋条「参谋设置」勾选框，默认关）；只认 getActiveConstruct() 的 seq + 当前拍——单拍 /
+// 弧线 / 没有构件时卡不出、自动不跑、手动也点不到。连接走 soCallModel（= StoryOracleAPI.run 同一条），破限照参谋模式
+// （maybeWrapJb(...,'advisor')）；喂料 = 当前拍原样的幕后指示（buildDirective，含 ✏️ customText）+ 角色卡 / Persona
+// （buildCardSection）+ 本次扫描亮起的绿灯世界书（跟随「世界书」范围设置，custom 档照用户勾选）+ 最新正文。
+// false → 设置行不渲染、defaults 不多一个键、监听器不登记、applyPlanInjection 钩子不跑——与 1.86.0 逐字节相同。
+// 读点：defaults · 参谋条模板 · bindControls / loadSettingsIntoForm · init 监听注册 · applyPlanInjection 钩子 · nbeatCurrent 闸。
+// 单测 next-beat*.test.mjs；smoke tests/next-beat-smoke.mjs（:8003）。
+const ENABLE_NEXT_BEAT = true;
 
 // 📋 自定义模板任务（spec 2026-09-03）：校正模式第三档「自定义」——用户自存模板接管「每条新回复」的校正槽位
 // （与校正互斥；「沿用校正的正文识别」可关）。false ⇒ 下拉无第三档、自定义键惰性、出站字节与 1.76.0 全同。
 const ENABLE_FIX_CUSTOM_TASK = true;
+
+// 🌐 模板广场（1.86.0，spec docs/superpowers/specs/2026-09-24-fix-template-hub-design.md）：自定义模板的
+// 共享广场——从 GitHub（经 jsDelivr）读、经 Cloudflare Worker 投稿、Prince 审核后发布。关 = 两个按钮不渲染、
+// 从不联网、设置不动（defaults 里不出现 fixHubInstalled 键），与 1.85.3 逐字节相同。
+// 读点：defaults · 自定义面板模板行两个按钮 + 绑定 · fixHubWorkerUrl · fixHubLibraryUrlsDefault · openFixHub / openFixShare。
+const ENABLE_FIX_TEMPLATE_HUB = true;
 
 // 自动诊断总开关（用户功能请求；实验性——它是唯一会【自动写入 MVU 游戏状态】的功能，故配真正的杀死开关）。
 // === 出问题时的一键回退：把这一行改成 false ===（无需动其它代码）。关掉时：
@@ -1779,6 +1796,9 @@ const AUTO_DIAGNOSE_WRITE_BACK = true;
 // 自己种好 / 转忙就不种；parseMessage 抛错 → 不种（退回旧行为）。false = 播种步整段不跑，与 1.77.1 逐字节相同。
 // runAutoDiagnose 实读（constants-meta 守）。单测 diag-floor-seed.test.mjs。
 const ENABLE_DIAG_FLOOR_SEED = true;
+// 🩺 schema 感知诊断（1.89.0，spec 2026-09-27-schema-aware-diagnosis-design.md）：写入前按卡片规则预演补丁（A）、
+// mvu_zod 卡的存档检查（B）。false → 一切路径与 1.88.0 逐字节相同。
+const ENABLE_SCHEMA_DIAG = true;
 // 宽限窗默认值（毫秒）：MVU 的 MESSAGE_RECEIVED 入口 `_.throttle(onMessageReceived, 3000)` —— 连着两次 MESSAGE_RECEIVED
 // （快速重掷 / 群聊）时它的处理会被推迟到 3s 末尾；给 3.5s 让它先做完自己那份，再判「这一楼真的没人管」。
 // 运行期可由 autoDiagnoseSeedGraceMs 覆盖（无 UI，单测用它缩短等待）。
@@ -2056,7 +2076,7 @@ const ENABLE_CUSTOM_PERSONAS = true;
 // —— 更新提醒（1.38.0）——
 // SO_VERSION 是代码内唯一版本号，必须与 manifest.json 的 version 完全一致——update-check.test.mjs
 // 有失配即红的漂移钉（发版清单：两处一起 bump）。
-const SO_VERSION = '1.84.0';
+const SO_VERSION = '1.89.0';
 // 更新提醒总开关。false → 设置面板不渲染「更新」组、开窗不检查、红点绘制器与一键更新 no-op、
 // 绑定/回填跳过——字节级零行为变化。运行期另有 opt-out 设置 updAutoCheck（默认开）。
 const ENABLE_UPDATE_CHECK = true;
@@ -2285,6 +2305,10 @@ const defaults = {
     fixBundles: [],
     // 📋 自定义模板任务：全局具名模板库 [{ name, prompt }]（仿套餐；读时 normalizeFixTemplates 归一）。
     fixTemplates: [],
+    // 🌐 模板广场：已下载记录 { t0042: { version, name } }——驱动「已下载 / 有新版本」。写入恒【赋新对象】
+    // （defaults 按引用赋，原地改会污染 defaults，同 fixTemplates 的注释）。旗关时这个键根本不进 defaults
+    // （设置对象一个键都不多，与 1.85.3 同形）。
+    ...(ENABLE_FIX_TEMPLATE_HUB ? { fixHubInstalled: {} } : {}),
     // 自定义任务的 per-chat 键（进 FIX_CFG_KEYS、随套餐走）：任务二选一 / 选中模板名 / 沿用识别 / 自带两区。
     fixA_task: 'fix', fixC_template: '', fixC_useMechanic: true, fixC_keepTags: '', fixC_dropTags: '',
     // 普通模式附带 MVU 实时变量状态（stat_data）。这是数值问题的唯一权威来源：
@@ -2395,6 +2419,7 @@ const defaults = {
     // 同一个提示词构建器与同一套精选条目，没有校正那种手动/自动分家的基础）。
     // 内置破限（哨兵）也跟着它走 —— 见 modeWantsJb。
     diagnoseUsePreset: false,
+    ...(ENABLE_SCHEMA_DIAG ? { diagSchemaRetry: true } : {}),   // 🩺 1.89.0：卡片规则拒绝时让模型按原因重写一次（多花一次调用）；旗关不多一个键
     // 角色工坊（Task 4）——全局设置（不进 per-chat 覆盖）。
     // bldTarget：打造目标。'persona' = 写进 Persona；'npc' = 写进世界书条目。
     // bldBooks：选条目器的世界书多选（同 lorebookTargets 语义：[] = 当前激活的全部）。
@@ -2443,6 +2468,10 @@ const defaults = {
     // Whether the bridge strips the guidance block back out before the main model sees the user message.
     // true = original behavior (planner-only). false = keep the guidance in the message (markers removed).
     dbBridgeStrip: true,
+    // 🧭 下一拍建议（1.87.0，ENABLE_NEXT_BEAT）：总开关 / 每条新回复自动生成（多花一次调用）/ 选项写法（null = 用内置默认，
+    // 与各模式提示词覆盖同一惯例——没改过的人随版本拿到内置改进；'' = 用户清空、不发模板）/ 最新正文截取上限（字）。
+    // 旗关时这几个键根本不进 defaults（设置对象一个键都不多，与 1.86.0 同形）。
+    ...(ENABLE_NEXT_BEAT ? { nextBeatEnabled: false, nextBeatAuto: false, nextBeatTemplate: null, nextBeatMaxChars: 4000 } : {}),
     // Whether advisor mode runs THROUGH the curated preset (directive layered on
     // top, RP markers skipped) — same opt-in pattern as lorebookUsePreset.
     advisorUsePreset: false,
@@ -3062,7 +3091,9 @@ function init() {
             // 回复后编排：每条新 AI 回复在共享锁下先自动校正、后自动诊断（各自仅在其自动模式开启时动作）。
             // 必须「即发即忘」：ST 的 eventSource.emit 会 await 监听器，直接挂上 async 的
             // maybePostReply 会让每条回复都卡住整个校正 + 诊断往返。包一层、不把 promise 交回去。
-            ctx.eventSource.on(et.MESSAGE_RECEIVED || 'message_received', (id) => {
+            // 开场白（type 'first_message'：打开只有开场白的聊天时 ST 会发）不是新回复 → 跳过（postReplyHandlesType）。
+            ctx.eventSource.on(et.MESSAGE_RECEIVED || 'message_received', (id, type) => {
+                if (!postReplyHandlesType(type)) return;
                 Promise.resolve(maybePostReply(id)).catch((e) => console.warn('[Story Oracle] 回复后编排调度失败：', e));
             });
             // 新的用户输入令旧回复的后台工作失去语义基础：静默作废 Story Oracle 自己的等待 / LLM，
@@ -3090,6 +3121,24 @@ function init() {
                 et.MESSAGE_DELETED || 'message_deleted',
             ].forEach((ev) => ctx.eventSource.on(ev, () => { refreshFixChatEntry(); refreshOracleEntries(); }));
             ctx.eventSource.on(et.CHAT_CHANGED || 'chat_id_changed', () => { clearFixChatSel(); refreshFixChatEntry(); refreshOracleEntries(); });
+            if (ENABLE_NEXT_BEAT) {
+                // 🧭 下一拍建议（1.87.0）：楼层 / 聊天变动一律重对卡片（nbeatRefresh 自己判闸、判归属、掐陈旧在途请求）。
+                // 事件名对 ST 真源码 public/scripts/events.js 核过。自动生成挂 MESSAGE_RECEIVED（与回复后编排同一信号），
+                // 即发即忘——ST 的 emit 会 await 监听器。
+                [
+                    et.CHARACTER_MESSAGE_RENDERED || 'character_message_rendered',
+                    et.USER_MESSAGE_RENDERED || 'user_message_rendered',
+                    et.MESSAGE_SWIPED || 'message_swiped',
+                    et.MESSAGE_EDITED || 'message_edited',
+                    et.MESSAGE_DELETED || 'message_deleted',
+                    et.MESSAGE_UPDATED || 'message_updated',
+                    et.MESSAGE_SENT || 'message_sent',
+                ].forEach((ev) => ctx.eventSource.on(ev, () => nbeatScheduleRefresh()));
+                ctx.eventSource.on(et.CHAT_CHANGED || 'chat_id_changed', () => { nbeatScheduleRefresh(); setTimeout(nbeatRefresh, 400); });
+                ctx.eventSource.on(et.MESSAGE_RECEIVED || 'message_received', (id, type) => {
+                    Promise.resolve(nbeatOnMessageReceived(id, type)).catch((e) => console.warn('[Story Oracle] 下一拍建议自动生成失败：', e));
+                });
+            }
             if (ENABLE_MVU_EDITOR) {
                 // 🎛 打开中的编辑器「跟随现实」（1.59.0）：这六个事件是「本聊天的 stat_data 可能刚被别人
                 // 改过」的信号源。清单来自 staleness-audit §9 的写者盘点（每一条都对着真实写者列的）：
@@ -6771,6 +6820,745 @@ function fixTagOverlap(keepTags, dropTags) {
     return out;
 }
 
+/* ------------------------------------------------------------------ *
+ * 🌐 模板广场（1.86.0）纯函数层
+ * 提交规则是 story-oracle-templates/lib/submission.mjs 的逐条副本——两边由同一张夹具表
+ * （test/fixtures/submission-cases.json）钉住；改一边必须同改另一边 + 夹具。
+ * 广场来的一切文字都是【不可信】的：本层只做解析与校验，渲染层一律 textContent。
+ * ------------------------------------------------------------------ */
+const FIX_HUB_REPO = 'namelessone88/story-oracle-templates';
+const FIX_HUB_WORKER_URL = 'https://so-template-hub.namelessone88.workers.dev';   // 投稿 Worker（2026-09-25 开通）；空 = 「提交分享」不渲染，只留「复制分享文本」
+const FIX_HUB_MARKER = '<!-- SO-TEMPLATE v1 -->';
+const FIX_HUB_LIMITS = Object.freeze({ name: 40, prompt: 8000, description: 200, author: 30, model: 60, client: 20, tagsMin: 1, tagsMax: 3 });
+const FIX_HUB_ERR_TEXT = Object.freeze({
+    'name.required': '模板名字不能为空',
+    'name.too_long': '模板名字最多 40 个字',
+    'prompt.required': '模板正文不能为空',
+    'prompt.too_long': '模板正文最多 8000 个字',
+    'description.too_long': '说明最多 200 个字',
+    'author.too_long': '作者名最多 30 个字',
+    'model.too_long': '测试模型最多 60 个字',
+    'tags.too_few_tags': '至少选 1 个标签',
+    'tags.too_many_tags': '最多选 3 个标签',
+    'tags.bad_tag': '标签不在列表里，刷新广场后再选',
+    'updateOf.bad_update': '要更新的模板在广场里找不到了',
+    'updateOf.unknown_update': '要更新的模板在广场里找不到了',
+    '_fallback': '内容格式不对',
+});
+const fixHubIdRe = /^t\d{4,}$/;
+let fixHubSkipWarned = false;   // 坏条目只 console.warn 一次（spec §5）
+let fixHubTestWorkerUrl = null;   // 只给测试 / smoke 用（StoryOracleAPI.unsafe.eval 赋值）：null = 用正式地址；字符串（含空串 = 模拟未开通）= 覆盖
+
+// 清洗口径（与仓库 clean 逐条相同）：孤立代理 → U+FFFD、CRLF / CR → LF、去 C0/C1 控制字符（留 \t \n）。
+function fixHubClean(s) {
+    let t = String(s);
+    t = typeof t.toWellFormed === 'function'
+        ? t.toWellFormed()
+        : t.replace(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '\ufffd');
+    t = t.replace(/\r\n?/g, '\n');
+    return t.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
+}
+
+// 提交校验（与仓库 validateSubmission 逐条相同）：长度按【码点】数；错误按字段顺序；未知键丢弃。
+// knownIds = null → 不核 updateOf 是否存在（广场连不上时的离线分享）。
+// 单行字段（name / author / description / model）清洗后把「换行 / 制表符连同两侧空白」折成一个空格再 trim；
+// prompt 保留换行（spec §3.5）。
+function fixHubValidateSubmission(input, tags, knownIds) {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return { ok: false, errors: [{ field: '_', code: 'bad_type' }] };
+    const cpLen = (s) => [...s].length;
+    const errors = [];
+    const value = {};
+    const str = (field, required, max, singleLine) => {
+        const raw = input[field];
+        if (raw === undefined || raw === null) {
+            if (required) errors.push({ field, code: 'required' });
+            value[field] = '';
+            return;
+        }
+        if (typeof raw !== 'string') { errors.push({ field, code: 'bad_type' }); value[field] = ''; return; }
+        let t = fixHubClean(raw);
+        if (singleLine) t = t.replace(/\s*[\n\t]\s*/g, ' ');
+        t = t.trim();
+        if (required && !t) errors.push({ field, code: 'required' });
+        else if (cpLen(t) > max) errors.push({ field, code: 'too_long' });
+        value[field] = t;
+    };
+    str('name', true, FIX_HUB_LIMITS.name, true);
+    str('prompt', true, FIX_HUB_LIMITS.prompt, false);
+    str('description', false, FIX_HUB_LIMITS.description, true);
+    str('author', false, FIX_HUB_LIMITS.author, true);
+    const rawTags = (input.tags === undefined || input.tags === null) ? [] : input.tags;
+    if (!Array.isArray(rawTags) || rawTags.some((t) => typeof t !== 'string')) {
+        errors.push({ field: 'tags', code: 'bad_type' });
+        value.tags = [];
+    } else {
+        const uniq = [...new Set(rawTags.map((t) => fixHubClean(t).trim()).filter(Boolean))];
+        value.tags = uniq;
+        const allowed = Array.isArray(tags) ? tags : [];
+        if (uniq.length < FIX_HUB_LIMITS.tagsMin) errors.push({ field: 'tags', code: 'too_few_tags' });
+        else if (uniq.length > FIX_HUB_LIMITS.tagsMax) errors.push({ field: 'tags', code: 'too_many_tags' });
+        else if (uniq.some((t) => !allowed.includes(t))) errors.push({ field: 'tags', code: 'bad_tag' });
+    }
+    str('model', false, FIX_HUB_LIMITS.model, true);
+    const u = input.updateOf;
+    if (u === undefined || u === null || u === '') value.updateOf = null;
+    else if (typeof u !== 'string') { errors.push({ field: 'updateOf', code: 'bad_type' }); value.updateOf = null; }
+    else if (!fixHubIdRe.test(u)) { errors.push({ field: 'updateOf', code: 'bad_update' }); value.updateOf = null; }
+    else if (Array.isArray(knownIds) && !knownIds.includes(u)) { errors.push({ field: 'updateOf', code: 'unknown_update' }); value.updateOf = u; }
+    else value.updateOf = u;
+    value.client = typeof input.client === 'string' ? [...fixHubClean(input.client).trim()].slice(0, FIX_HUB_LIMITS.client).join('') : '';
+    return errors.length ? { ok: false, errors } : { ok: true, value };
+}
+
+function fixHubFieldMessage(field, code) {
+    return FIX_HUB_ERR_TEXT[`${field}.${code}`] || FIX_HUB_ERR_TEXT._fallback;
+}
+
+// 分享区块：JSON 里的反引号 / 尖括号一律转义成 \u0060 / \u003c——正文里就算写着 ``` 或标记本身，
+// 区块里也只剩两道围栏的 6 个反引号、标记只出现一次（Review Focus 3）。
+function fixHubBuildShareBlock(value) {
+    const body = JSON.stringify(value, null, 2).replace(/`/g, '\\u0060').replace(/</g, '\\u003c');
+    return `${FIX_HUB_MARKER}\n\`\`\`json\n${body}\n\`\`\``;
+}
+
+// 只认【第一个】标记后紧跟的 ```json 围栏（前后夹着聊天闲话也行）；坏 JSON / 非对象 → null。
+function fixHubParseShareBlock(text) {
+    const s = String(text == null ? '' : text);
+    const at = s.indexOf(FIX_HUB_MARKER);
+    if (at < 0) return null;
+    const m = s.slice(at + FIX_HUB_MARKER.length).match(/^\s*```json\n([\s\S]*?)\n```/);
+    if (!m) return null;
+    let v;
+    try { v = JSON.parse(m[1]); } catch (e) { return null; }
+    return (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
+}
+
+// 单个广场条目 → HubEntry | null（坏条目整条跳过，绝不半条渲染）。校验复用提交规则，标签只校形不校名单。
+function fixHubLibraryEntry(e) {
+    if (!e || typeof e !== 'object' || Array.isArray(e)) return null;
+    if (typeof e.id !== 'string' || !fixHubIdRe.test(e.id)) return null;
+    if (!Number.isInteger(e.version) || e.version < 1) return null;
+    const ownTags = Array.isArray(e.tags) ? e.tags.filter((t) => typeof t === 'string').map((t) => fixHubClean(t).trim()) : [];
+    const v = fixHubValidateSubmission({ name: e.name, prompt: e.prompt, author: e.author, description: e.description, tags: e.tags, model: e.model }, ownTags, null);
+    if (!v.ok) return null;
+    const { name, prompt, author, description, tags, model } = v.value;
+    return { id: e.id, version: e.version, updatedAt: typeof e.updatedAt === 'string' ? fixHubClean(e.updatedAt).trim() : '', name, prompt, author, description, tags, model };
+}
+
+// 广场 JSON → { ok, lib, skipped } | { ok:false, reason }。reason：'shape' = 根本不是广场（200 回 HTML 门户页、
+// 缺 schema…，该试下一个镜像）；'schema' = 真广场但格式号不认识（该停下提示更新神谕）。
+function fixHubParseLibrary(body) {
+    let data = body;
+    if (typeof body === 'string') {
+        try { data = JSON.parse(body); } catch (e) { return { ok: false, reason: 'shape' }; }
+    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return { ok: false, reason: 'shape' };
+    if (data.schema !== 1) return { ok: false, reason: typeof data.schema === 'number' ? 'schema' : 'shape' };
+    if (!Array.isArray(data.templates)) return { ok: false, reason: 'shape' };
+    const tags = Array.isArray(data.tags) ? data.tags.filter((t) => typeof t === 'string').map((t) => fixHubClean(t).trim()).filter(Boolean) : [];
+    const templates = [];
+    const seen = new Set();
+    let skipped = 0;
+    for (const raw of data.templates) {
+        const t = fixHubLibraryEntry(raw);
+        if (!t || seen.has(t.id)) { skipped += 1; continue; }
+        seen.add(t.id);
+        templates.push(t);
+    }
+    if (skipped && !fixHubSkipWarned) { fixHubSkipWarned = true; console.warn(`[Story Oracle] 模板广场：${skipped} 个条目格式不对，已跳过`); }
+    return { ok: true, lib: { generatedAt: typeof data.generatedAt === 'string' ? data.generatedAt : '', tags, templates }, skipped };
+}
+
+// 过滤：标签（单选，'' = 全部）AND 搜索（名字 / 作者 / 说明，不分大小写）。
+function fixHubFilter(templates, { tag = '', q = '' } = {}) {
+    const needle = String(q || '').trim().toLowerCase();
+    return (Array.isArray(templates) ? templates : []).filter((t) => {
+        if (tag && !t.tags.includes(tag)) return false;
+        if (!needle) return true;
+        return [t.name, t.author, t.description].some((f) => String(f || '').toLowerCase().includes(needle));
+    });
+}
+
+// 下载到本地时的名字：撞名追加「（2）」「（3）」…（taken 须含内置示例名——saveFixTemplate 会硬拒保留名，Review Focus 2）。
+function fixHubLocalName(name, taken) {
+    const set = new Set(Array.isArray(taken) ? taken : []);
+    if (!set.has(name)) return name;
+    for (let n = 2; ; n += 1) {
+        const cand = `${name}（${n}）`;
+        if (!set.has(cand)) return cand;
+    }
+}
+
+// 'none' | 'installed' | 'update'。本地那份被改名 / 删掉（按名字对不上）= 'none'。
+function fixHubInstallStatus(entry, installed, localNames) {
+    const rec = installed && Object.prototype.hasOwnProperty.call(installed, entry.id) ? installed[entry.id] : null;
+    if (!rec || !Array.isArray(localNames) || !localNames.includes(rec.name)) return 'none';
+    return rec.version < entry.version ? 'update' : 'installed';
+}
+
+// 剪掉本地已不存在的已下载记录——恒返回【新对象】（调用方整体赋回 s.fixHubInstalled，绝不原地改）。
+function fixHubPruneInstalled(installed, localNames) {
+    const out = {};
+    const names = Array.isArray(localNames) ? localNames : [];
+    for (const [id, rec] of Object.entries(installed || {})) {
+        if (rec && names.includes(rec.name)) out[id] = { version: rec.version, name: rec.name };
+    }
+    return out;
+}
+
+// 三个读取镜像，按序试（spec §4.1）。
+function fixHubLibraryUrls(repo) {
+    return [
+        `https://testingcf.jsdelivr.net/gh/${repo}@main/dist/library.json`,
+        `https://cdn.jsdelivr.net/gh/${repo}@main/dist/library.json`,
+        `https://raw.githubusercontent.com/${repo}/main/dist/library.json`,
+    ];
+}
+
+// 投稿地址：旗关恒空；测试覆盖优先；去尾斜杠。空 = 分享卡不渲染「提交分享」。
+function fixHubWorkerUrl() {
+    if (!ENABLE_FIX_TEMPLATE_HUB) return '';
+    const u = fixHubTestWorkerUrl !== null ? fixHubTestWorkerUrl : FIX_HUB_WORKER_URL;
+    return String(u || '').replace(/\/+$/, '');
+}
+
+// 广场卡读这一个；旗关 = 空表 = 永不联网。
+function fixHubLibraryUrlsDefault() {
+    return ENABLE_FIX_TEMPLATE_HUB ? fixHubLibraryUrls(FIX_HUB_REPO) : [];
+}
+
+/* ------------------------------------------------------------------ *
+ * 🌐 模板广场 UI（1.86.0）——拉取 / 缓存 / 渲染 / 下载。广场文字不可信：一律 textContent。
+ * 卡片骨架（buildFixHubCard 里那段静态 innerHTML）不含任何外来数据。
+ * ------------------------------------------------------------------ */
+const FIX_HUB_CACHE_KEY = 'so-fixhub-cache-v1';
+let fixHubState = { lib: null, source: '', fetchedAt: 0, tag: '', q: '', open: new Set(), pending: '' };
+
+// 缓存 = localStorage 里的 { fetchedAt, url, body }；每次读写都 try/catch（隐私模式 / 满了 / 被禁用都照常能用）。
+function fixHubCacheRead() {
+    try {
+        const raw = localStorage.getItem(FIX_HUB_CACHE_KEY);
+        if (!raw) return null;
+        const c = JSON.parse(raw);
+        return (c && typeof c.body === 'string') ? c : null;
+    } catch (e) { return null; }
+}
+function fixHubCacheWrite(obj) {
+    try { localStorage.setItem(FIX_HUB_CACHE_KEY, JSON.stringify(obj)); } catch (e) { /* 隐私模式 / 满了：不缓存也能用 */ }
+}
+
+// 纯函数：广场的「新旧」= generatedAt 的时间戳；解析不了 → 0（最旧）。
+function fixHubLibTime(lib) {
+    const t = Date.parse(lib && lib.generatedAt);
+    return Number.isFinite(t) ? t : 0;
+}
+
+// 三个镜像【同时】问，取 generatedAt 最新的那份合法广场（1.86.0 真机实测：testingcf 镜像是独立缓存、
+// 发布后的清缓存够不着它，按顺序取第一份会一直拿到旧的空广场）。并列时按镜像顺序优先。
+// 200 但不是合法广场（HTML 门户页等）= 这一路失败；没有任何合法广场、且有一路回了不认识的 schema 号 =
+// 真广场出了新格式 → 不写缓存。网上拿到的比本地缓存还旧（只连得上陈旧镜像）→ 继续用缓存那份、不回写。
+// 全失败 → 回缓存（source:'cache'）；连缓存都没有 → unreachable。
+async function fixHubLoadLibrary({ force = false } = {}) {
+    if (!force && fixHubState.lib) return { ok: true, lib: fixHubState.lib, source: fixHubState.source, fetchedAt: fixHubState.fetchedAt };
+    const urls = fixHubLibraryUrlsDefault();
+    const results = await Promise.all(urls.map(async (url) => {
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), 10000);
+        try {
+            const res = await fetch(url, { cache: 'no-store', signal: ctl.signal });
+            if (!res.ok) return null;
+            const text = await res.text();
+            return { url, text, parsed: fixHubParseLibrary(text) };
+        } catch (e) {
+            return null;   // 超时 / 断网 / CORS：这一路算失败
+        } finally {
+            clearTimeout(timer);
+        }
+    }));
+    let best = null;
+    for (const r of results) {
+        if (r && r.parsed.ok && (!best || fixHubLibTime(r.parsed.lib) > fixHubLibTime(best.parsed.lib))) best = r;
+    }
+    if (best) {
+        const cachedNow = fixHubCacheRead();
+        const cachedParsed = cachedNow ? fixHubParseLibrary(cachedNow.body) : null;
+        const fetchedAt = Date.now();
+        if (cachedParsed && cachedParsed.ok && fixHubLibTime(cachedParsed.lib) > fixHubLibTime(best.parsed.lib)) {
+            Object.assign(fixHubState, { lib: cachedParsed.lib, source: 'net', fetchedAt });
+            return { ok: true, lib: cachedParsed.lib, source: 'net', fetchedAt };
+        }
+        fixHubCacheWrite({ fetchedAt, url: best.url, body: best.text });
+        Object.assign(fixHubState, { lib: best.parsed.lib, source: 'net', fetchedAt });
+        return { ok: true, lib: best.parsed.lib, source: 'net', fetchedAt };
+    }
+    if (results.some((r) => r && r.parsed.reason === 'schema')) {
+        // 真广场换了新格式：内存里那份旧列表作废（否则搜索 / 点标签的重画会把它画回提示上面）；存储缓存不动。
+        fixHubState.lib = null;
+        return { ok: false, reason: 'schema' };
+    }
+    const cached = fixHubCacheRead();
+    const parsed = cached ? fixHubParseLibrary(cached.body) : null;
+    if (parsed && parsed.ok) {
+        Object.assign(fixHubState, { lib: parsed.lib, source: 'cache', fetchedAt: cached.fetchedAt });
+        return { ok: true, lib: parsed.lib, source: 'cache', fetchedAt: cached.fetchedAt };
+    }
+    // 存储缓存用不了（隐私模式 / 被清 / 坏了）但这次会话里拉到过 → 那份就是离线副本（Prince 裁：保留列表）。
+    if (fixHubState.lib) {
+        fixHubState.source = 'cache';
+        return { ok: true, lib: fixHubState.lib, source: 'cache', fetchedAt: fixHubState.fetchedAt };
+    }
+    return { ok: false, reason: 'unreachable' };
+}
+
+function fixHubMmDd(ms) {
+    const d = new Date(ms);
+    return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// 纯 DOM：只 createElement + textContent。ctx.pending = 正在问「覆盖 / 另存」的那条 id。
+function fixHubRenderList(listEl, entries, ctx) {
+    listEl.textContent = '';
+    const mk = (tag, cls, text) => { const el = document.createElement(tag); if (cls) el.className = cls; if (text != null) el.textContent = text; return el; };
+    for (const e of entries) {
+        const item = mk('div', 'so-fixhub-item');
+        item.dataset.id = e.id;
+        const head = mk('div', 'so-fixhub-item-head');
+        head.appendChild(mk('span', 'so-fixhub-name', e.name));
+        head.appendChild(mk('span', 'so-fixhub-meta', `v${e.version} · ${e.author || '匿名'}`));
+        item.appendChild(head);
+        if (e.description) item.appendChild(mk('div', 'so-fixhub-desc', e.description));
+        item.appendChild(mk('div', 'so-fixhub-tagline', e.tags.map((t) => '#' + t).join('  ') + (e.model ? `  测试模型：${e.model}` : '')));
+        const btns = mk('div', 'so-fixhub-item-btns');
+        const open = ctx.open.has(e.id);
+        const pv = mk('button', 'so-fixhub-btn so-fixhub-preview', open ? '收起' : '预览');
+        pv.type = 'button';
+        const status = fixHubInstallStatus(e, ctx.installed, ctx.localNames);
+        const dl = mk('button', 'so-fixhub-btn so-fixhub-dl', status === 'installed' ? '已下载' : status === 'update' ? '有新版本' : '下载');
+        dl.type = 'button';
+        if (status === 'installed') dl.disabled = true;
+        if (status === 'update') dl.classList.add('so-fixhub-update');
+        btns.append(pv, dl);
+        item.appendChild(btns);
+        if (open) item.appendChild(mk('pre', 'so-fixhub-prompt', e.prompt));
+        if (ctx.pending === e.id) {
+            const localName = (ctx.installed[e.id] && ctx.installed[e.id].name) || e.name;
+            const row = mk('div', 'so-fixhub-confirm');
+            row.appendChild(mk('span', 'so-fixhub-confirm-q', '这个模板有新版本。'));
+            const ow = mk('button', 'so-fixhub-btn so-fixhub-overwrite', `覆盖本地的〔${localName}〕`); ow.type = 'button';
+            const cp = mk('button', 'so-fixhub-btn so-fixhub-copy', '另存一份'); cp.type = 'button';
+            const cc = mk('button', 'so-fixhub-btn so-fixhub-cancel', '取消'); cc.type = 'button';
+            row.append(ow, cp, cc);
+            item.appendChild(row);
+        }
+        listEl.appendChild(item);
+    }
+}
+
+// 用户自己的模板名（不含内置示例）——「已下载」按名字认领本地那份。
+function fixHubLocalNames() {
+    return normalizeFixTemplates(getSettings().fixTemplates).map((t) => t.name);
+}
+
+// 下载 = 存成普通 {name,prompt} 模板 + 记一笔已下载 + 选中它。脏着先问（Review Focus 1，沿用「切换」同一句）；
+// 取消 = 什么都不动。新名字避让用户库 + 内置示例名（Review Focus 2：saveFixTemplate 会硬拒保留名）。
+async function fixHubDownload(entry, mode) {
+    if (fixTplDirty && !(await uiConfirm('当前模板正文有未保存的改动，放弃并切换？'))) return false;
+    const s = getSettings();
+    const mine = fixHubLocalNames();
+    const installed = fixHubPruneInstalled(s.fixHubInstalled, mine);
+    const builtinNames = FIX_SAMPLE_TEMPLATES.map((t) => t.name);
+    const name = (mode === 'overwrite' && installed[entry.id])
+        ? installed[entry.id].name
+        : fixHubLocalName(entry.name, [...mine, ...builtinNames]);
+    if (!saveFixTemplate(name, entry.prompt)) return false;
+    s.fixHubInstalled = { ...installed, [entry.id]: { version: entry.version, name } };   // 赋新对象，绝不原地改
+    save();
+    setFixCfg({ fixC_template: name });
+    populateFixTemplates();
+    const sel = win && win.querySelector('#so-fixc-template');
+    const box = win && win.querySelector('#so-fixc-prompt');
+    if (sel) sel.value = name;
+    if (box) box.value = entry.prompt;
+    fixTplDirty = false; fixTplDirtyFor = name; updateFixTplDirtyMarker();
+    updateFixVerdict();
+    // 名字来自广场（不可信）：显式要求 toastr 转义，不依赖 ST 的全局默认。
+    if (typeof toastr !== 'undefined') toastr.success(`已下载：〔${name}〕`, '', { escapeHtml: true });
+    return true;
+}
+
+function buildFixHubCard() {
+    let el = win.querySelector('#so-fixhub');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'so-fixhub';
+    el.innerHTML =
+        '<div id="so-fixhub-card">' +
+        '<div id="so-fixhub-head"><span class="so-warn-title">🌐 模板广场</span>' +
+        '<span class="so-fixhub-headbtns"><div class="so-iconbtn" id="so-fixhub-refresh" title="刷新"><i class="fa-solid fa-rotate-right"></i></div>' +
+        '<div class="so-iconbtn so-warn-x" title="关闭"><i class="fa-solid fa-xmark"></i></div></span></div>' +
+        '<input id="so-fixhub-search" type="search" placeholder="搜索名字 / 作者 / 说明……">' +
+        '<div id="so-fixhub-tags"></div>' +
+        '<div id="so-fixhub-status" class="so-hint"></div>' +
+        '<div id="so-fixhub-list"></div>' +
+        '<div id="so-fixhub-foot" class="so-hint"></div>' +
+        '</div>';
+    win.appendChild(el);
+    el.addEventListener('click', (e) => { if (e.target === el) closeFixHub(); });   // 点遮罩关闭
+    el.querySelector('.so-warn-x').addEventListener('click', closeFixHub);
+    el.querySelector('#so-fixhub-refresh').addEventListener('click', () => fixHubRefresh(true));
+    el.querySelector('#so-fixhub-search').addEventListener('input', (e) => { fixHubState.q = e.target.value; fixHubRender(); });
+    el.querySelector('#so-fixhub-tags').addEventListener('click', (e) => {
+        const chip = e.target.closest('.so-fixhub-chip');
+        if (!chip) return;
+        fixHubState.tag = chip.dataset.tag || '';
+        fixHubRender();
+    });
+    el.querySelector('#so-fixhub-list').addEventListener('click', async (e) => {
+        const item = e.target.closest('.so-fixhub-item');
+        if (!item || !fixHubState.lib) return;
+        const entry = fixHubState.lib.templates.find((t) => t.id === item.dataset.id);
+        if (!entry) return;
+        if (e.target.closest('.so-fixhub-preview')) {
+            if (fixHubState.open.has(entry.id)) fixHubState.open.delete(entry.id); else fixHubState.open.add(entry.id);
+        } else if (e.target.closest('.so-fixhub-dl')) {
+            const st = fixHubInstallStatus(entry, getSettings().fixHubInstalled || {}, fixHubLocalNames());
+            if (st === 'update') fixHubState.pending = entry.id;
+            else if (st === 'none') await fixHubDownload(entry, 'new');
+        } else if (e.target.closest('.so-fixhub-overwrite')) {
+            fixHubState.pending = '';
+            await fixHubDownload(entry, 'overwrite');
+        } else if (e.target.closest('.so-fixhub-copy')) {
+            fixHubState.pending = '';
+            await fixHubDownload(entry, 'copy');
+        } else if (e.target.closest('.so-fixhub-cancel')) {
+            fixHubState.pending = '';
+        } else return;
+        fixHubRender();
+    });
+    return el;
+}
+
+// 按 fixHubState 重画标签条 / 列表 / 状态行 / 页脚。本地那份被改名或删掉的已下载记录在这里剪掉并落盘（spec §3.6）。
+function fixHubRender() {
+    const el = win && win.querySelector('#so-fixhub');
+    if (!el) return;
+    const statusEl = el.querySelector('#so-fixhub-status');
+    const listEl = el.querySelector('#so-fixhub-list');
+    const tagsEl = el.querySelector('#so-fixhub-tags');
+    const footEl = el.querySelector('#so-fixhub-foot');
+    const libNow = fixHubState.lib;
+    tagsEl.textContent = '';
+    if (!libNow) { listEl.textContent = ''; footEl.textContent = ''; return; }
+    if (fixHubState.tag && !libNow.tags.includes(fixHubState.tag)) fixHubState.tag = '';   // 标签被 Prince 撤掉了 → 回「全部」
+    for (const t of ['', ...libNow.tags]) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'so-fixhub-chip' + (fixHubState.tag === t ? ' so-on' : '');
+        chip.dataset.tag = t;
+        chip.textContent = t || '全部';
+        tagsEl.appendChild(chip);
+    }
+    const s = getSettings();
+    const localNames = fixHubLocalNames();
+    const installed = fixHubPruneInstalled(s.fixHubInstalled, localNames);
+    if (Object.keys(installed).length !== Object.keys(s.fixHubInstalled || {}).length) { s.fixHubInstalled = installed; save(); }
+    fixHubRenderList(listEl, fixHubFilter(libNow.templates, { tag: fixHubState.tag, q: fixHubState.q }), {
+        installed, localNames, open: fixHubState.open, pending: fixHubState.pending,
+    });
+    statusEl.textContent = fixHubState.source === 'cache' ? `离线副本 · 更新于 ${fixHubMmDd(fixHubState.fetchedAt)}` : '';
+    // 页脚「更新于」= 广场本身最后一次发布（generatedAt）；解析不了（含 1970 的空仓占位）才退回拉取时刻。
+    const gen = Date.parse(libNow.generatedAt);
+    footEl.textContent = `共 ${libNow.templates.length} 个模板 · 更新于 ${fixHubMmDd(gen > 0 ? gen : fixHubState.fetchedAt)}`;
+}
+
+async function fixHubRefresh(force) {
+    const el = win && win.querySelector('#so-fixhub');
+    if (!el) return;
+    const r = await fixHubLoadLibrary({ force });
+    const statusEl = el.querySelector('#so-fixhub-status');
+    if (!r.ok) {
+        el.querySelector('#so-fixhub-list').textContent = '';
+        el.querySelector('#so-fixhub-tags').textContent = '';
+        el.querySelector('#so-fixhub-foot').textContent = '';
+        statusEl.textContent = r.reason === 'schema' ? '模板广场格式已更新，请先更新神谕' : '广场暂时连不上';
+        if (r.reason === 'unreachable') {
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.className = 'so-fixhub-btn';
+            retry.textContent = '重试';
+            retry.addEventListener('click', () => fixHubRefresh(true));
+            statusEl.appendChild(document.createTextNode(' '));
+            statusEl.appendChild(retry);
+        }
+        return;
+    }
+    fixHubRender();
+}
+
+function openFixHub() {
+    if (!ENABLE_FIX_TEMPLATE_HUB || !win) return;
+    const el = buildFixHubCard();
+    el.classList.add('open');
+    // 先用缓存秒开，再联网刷新（spec §4.1 第 1 条）。
+    if (!fixHubState.lib) {
+        const cached = fixHubCacheRead();
+        const parsed = cached ? fixHubParseLibrary(cached.body) : null;
+        if (parsed && parsed.ok) Object.assign(fixHubState, { lib: parsed.lib, source: 'cache', fetchedAt: cached.fetchedAt });
+    }
+    fixHubRender();
+    fixHubRefresh(true);
+}
+
+function closeFixHub() {
+    const el = win && win.querySelector('#so-fixhub');
+    if (el) el.classList.remove('open');
+    fixHubState.pending = '';
+}
+
+/* ------------------------------------------------------------------ *
+ * 📤 分享（1.86.0）——表单 / 提交（经 Worker）/ 复制分享文本（Discord 兜底）。
+ * Worker 回执同样不可信：只按 error / field / code 查我们自己的文案表，回执里的文字一个字都不上屏。
+ * ------------------------------------------------------------------ */
+const FIX_HUB_AUTHOR_KEY = 'so-fixhub-author-v1';
+const FIX_HUB_TAGS_FALLBACK = ['去AI味', '润色文风', '翻译', '格式整理', '视角人称', '扩写补写', '精简', '其他'];
+const FIX_HUB_REASON_TEXT = Object.freeze({ network: '连不上分享服务', upstream: '分享服务暂时出错', too_large: '内容太大', bad_json: '内容格式不对', not_found: '分享服务地址不对', unknown: '未知原因' });
+let fixShareOpenSeq = 0;   // 每次开卡 +1：开卡时的异步拉取回来晚了（卡已关 / 已重开）就不再往卡上写
+
+// '' = 可以分享；否则 = 为什么不行（点 📤 时以 toast 说明）。
+function fixHubShareBlockedReason(name, s, dirty) {
+    if (!name) return '先选一份自己的模板';
+    if (fixTemplateIsBuiltin(name)) return '内置示例不能分享，先另存为自己的模板';
+    const t = normalizeFixTemplates(s && s.fixTemplates).find((x) => x.name === name);
+    if (!t) return '先选一份自己的模板';
+    // 脏着先说「先保存」：刚新建、正文正写在框里时，已存的那份还是空的——说「正文是空的」是错话。
+    if (dirty) return '先保存模板，再分享';
+    if (!t.prompt.trim()) return '模板正文是空的，先写点内容';
+    return '';
+}
+
+// Worker 回执 → { ok, text }。只认 issue 为整数的成功；错误码按自家表查（own-key，撞原型属性名也落「未知原因」）。
+function fixHubSubmitResultText(status, body, networkError) {
+    const fail = (why) => ({ ok: false, text: `提交没成功（${why}）——可以点「复制分享文本」发到 Discord。` });
+    if (networkError) return fail(FIX_HUB_REASON_TEXT.network);
+    if (body && body.ok === true && Number.isInteger(body.issue)) return { ok: true, text: `已提交，审核通过后会出现在广场里（编号 #${body.issue}）` };
+    const code = body && typeof body.error === 'string' ? body.error : '';
+    if (code === 'rate') return { ok: false, text: '今天分享次数到上限了，明天再来' };
+    if (code === 'invalid' && Array.isArray(body.errors)) {
+        const lines = [...new Set(body.errors.map((e) => fixHubFieldMessage(String(e && e.field), String(e && e.code))))];
+        if (lines.length) return fail(lines.join('；'));
+    }
+    return fail(Object.prototype.hasOwnProperty.call(FIX_HUB_REASON_TEXT, code) ? FIX_HUB_REASON_TEXT[code] : FIX_HUB_REASON_TEXT.unknown);
+}
+
+function fixHubShareText(value) {
+    return '把这段发到神谕 Discord 的模板分享频道\n' + fixHubBuildShareBlock(value);
+}
+
+// POST <worker>/submit，15 s 超时。地址为空（Worker 未开通）按「连不上」处理——正常 UI 下提交按钮本就不渲染。
+async function fixHubSubmit(value) {
+    const base = fixHubWorkerUrl();
+    if (!base) return fixHubSubmitResultText(0, null, true);
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 15000);
+    try {
+        const res = await fetch(base + '/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value), signal: ctl.signal });
+        let body = null;
+        try { body = await res.json(); } catch (e) { body = null; }
+        return fixHubSubmitResultText(res.status, body, false);
+    } catch (e) {
+        return fixHubSubmitResultText(0, null, true);
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+function fixHubShareCollect(el, tags, knownIds) {
+    const val = (id) => el.querySelector(id).value;
+    const chosen = [...el.querySelectorAll('#so-fixshare-tags .so-fixhub-chip.so-on')].map((c) => c.dataset.tag);
+    const isUpd = el.querySelector('#so-fixshare-isupdate').checked;
+    return fixHubValidateSubmission({
+        name: val('#so-fixshare-name'), prompt: val('#so-fixshare-prompt'), author: val('#so-fixshare-author'),
+        description: val('#so-fixshare-desc'), tags: chosen, model: val('#so-fixshare-model'),
+        updateOf: isUpd ? val('#so-fixshare-updateof') : null, client: SO_VERSION,
+    }, tags, knownIds);
+}
+
+function fixHubShowErrors(el, lines) {
+    const box = el.querySelector('#so-fixshare-errors');
+    box.textContent = lines.join('\n');
+    box.hidden = !lines.length;
+    // 报错行在滚动体最底下（公开须知之后）：窗口矮时不滚过去就看不见原因。没有 scrollIntoView（jsdom 等）就跳过。
+    if (lines.length && typeof box.scrollIntoView === 'function') box.scrollIntoView({ block: 'nearest' });
+}
+
+function fixHubShareErrorLines(errors) {
+    return [...new Set(errors.map((x) => fixHubFieldMessage(x.field, x.code)))];
+}
+
+// 提交 / 复制前的整表检查：勾了「更新」却没选条目 → 拦下（不发、不复制）；否则走提交规则。
+// 返回 { ok:true, value } | { ok:false, lines }（lines = 行内报错文案）。
+function fixHubShareCheck(el) {
+    if (el.querySelector('#so-fixshare-isupdate').checked && !el.querySelector('#so-fixshare-updateof').value) {
+        return { ok: false, lines: ['选择要更新的模板'] };
+    }
+    const r = fixHubShareCollect(el, el._soTags, el._soKnown);
+    return r.ok ? r : { ok: false, lines: fixHubShareErrorLines(r.errors) };
+}
+
+async function fixHubCopy(el, value) {
+    const text = fixHubShareText(value);
+    try {
+        await navigator.clipboard.writeText(text);   // 非安全上下文（局域网 http）里 clipboard 不存在 → 抛 → 走兜底
+        if (typeof toastr !== 'undefined') toastr.success('已复制——发到神谕 Discord 的模板分享频道就行');
+    } catch (e) {
+        const box = el.querySelector('#so-fixshare-copybox');
+        box.hidden = false;
+        box.value = text;
+        box.focus();
+        box.select();
+        fixHubShowErrors(el, ['自动复制失败，请手动全选复制']);
+    }
+}
+
+// 标签 chips（重画时保留已选中的同名标签——开卡先用内置表，广场拉回来再换成现行表）。
+function fixHubShareRenderTags(el, tags) {
+    const tagsEl = el.querySelector('#so-fixshare-tags');
+    const picked = new Set([...tagsEl.querySelectorAll('.so-fixhub-chip.so-on')].map((c) => c.dataset.tag));
+    tagsEl.textContent = '';
+    for (const t of tags) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'so-fixhub-chip' + (picked.has(t) ? ' so-on' : '');
+        chip.dataset.tag = t;
+        chip.textContent = t;
+        tagsEl.appendChild(chip);
+    }
+}
+
+// 「这是对已分享模板的更新」：广场可用且非空才显示；下拉项 = 广场条目（名字经 textContent）。
+function fixHubShareRenderUpdate(el, libNow) {
+    const upd = el.querySelector('#so-fixshare-updateof');
+    const box = el.querySelector('#so-fixshare-isupdate');
+    upd.textContent = '';
+    box.checked = false;
+    upd.hidden = true;
+    el.querySelector('#so-fixshare-isupdate-row').hidden = !libNow || !libNow.templates.length;
+    if (!libNow) return;
+    const ph = document.createElement('option');
+    ph.value = '';
+    ph.textContent = '选择要更新的模板';
+    upd.appendChild(ph);
+    for (const t of libNow.templates) {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = `${t.name}（${t.id}）`;
+        upd.appendChild(opt);
+    }
+}
+
+function buildFixShareCard() {
+    let el = win.querySelector('#so-fixshare');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'so-fixshare';
+    el.innerHTML =
+        '<div id="so-fixshare-card">' +
+        '<div id="so-fixshare-head"><span class="so-warn-title">📤 分享模板</span><div class="so-iconbtn so-warn-x" title="关闭"><i class="fa-solid fa-xmark"></i></div></div>' +
+        '<div id="so-fixshare-body">' +
+        '<label class="so-fixshare-label">模板名字<input id="so-fixshare-name" type="text"></label>' +
+        '<label class="so-fixshare-label">模板正文（只读预览）<textarea id="so-fixshare-prompt" rows="5" readonly></textarea></label>' +
+        '<label class="so-fixshare-label">作者（可不填）<input id="so-fixshare-author" type="text"></label>' +
+        '<label class="so-fixshare-label">一句话说明<input id="so-fixshare-desc" type="text"></label>' +
+        '<div class="so-fixshare-label">标签（1–3 个）</div><div id="so-fixshare-tags"></div>' +
+        '<label class="so-fixshare-label">测试过的模型<input id="so-fixshare-model" type="text"></label>' +
+        '<label class="so-check so-lb-check" id="so-fixshare-isupdate-row"><input id="so-fixshare-isupdate" type="checkbox"><span>这是对已分享模板的更新</span></label>' +
+        '<select id="so-fixshare-updateof" hidden></select>' +
+        '<div class="so-hint">分享后模板公开，任何人都能下载使用；审核通过后才会出现在广场里。</div>' +
+        '<div id="so-fixshare-errors" class="so-hint so-fixshare-errors" hidden></div>' +
+        '<textarea id="so-fixshare-copybox" rows="4" readonly hidden></textarea>' +
+        '</div>' +
+        '<div id="so-fixshare-btns">' +
+        '<button type="button" id="so-fixshare-copy" class="so-fixhub-btn">复制分享文本</button>' +
+        '<button type="button" id="so-fixshare-submit" class="so-fixhub-btn so-fixshare-go">提交分享</button>' +
+        '</div></div>';
+    win.appendChild(el);
+    el.addEventListener('click', (e) => { if (e.target === el) closeFixShare(); });   // 点遮罩关闭
+    el.querySelector('.so-warn-x').addEventListener('click', closeFixShare);
+    el.querySelector('#so-fixshare-tags').addEventListener('click', (e) => {
+        const chip = e.target.closest('.so-fixhub-chip');
+        if (chip) chip.classList.toggle('so-on');
+    });
+    el.querySelector('#so-fixshare-isupdate').addEventListener('change', (e) => { el.querySelector('#so-fixshare-updateof').hidden = !e.target.checked; });
+    el.querySelector('#so-fixshare-author').addEventListener('change', (e) => { try { localStorage.setItem(FIX_HUB_AUTHOR_KEY, e.target.value); } catch (err) { /* 不记也行 */ } });
+    el.querySelector('#so-fixshare-copy').addEventListener('click', async () => {
+        const r = fixHubShareCheck(el);
+        if (!r.ok) { fixHubShowErrors(el, r.lines); return; }
+        fixHubShowErrors(el, []);
+        await fixHubCopy(el, r.value);
+    });
+    el.querySelector('#so-fixshare-submit').addEventListener('click', async (e) => {
+        const r = fixHubShareCheck(el);
+        if (!r.ok) { fixHubShowErrors(el, r.lines); return; }
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        const res = await fixHubSubmit(r.value);
+        btn.disabled = false;
+        fixHubShowErrors(el, res.ok ? [] : [res.text]);
+        el.querySelector('#so-fixshare-copy').classList.toggle('so-fixshare-go', !res.ok);   // 失败 → 高亮兜底按钮
+        if (res.ok) { if (typeof toastr !== 'undefined') toastr.success(res.text); closeFixShare(); }
+    });
+    return el;
+}
+
+// 开卡：不可分享 → toast 说明原因、不开；可分享 → 立刻用内置标签表开卡（不等网络），广场拉回来后换成现行
+// 标签表 + 填「更新」下拉；拉不到（且无缓存）→ 保留内置表、隐藏「更新」勾选（Worker 仍会按现行表复核）。
+async function openFixShare() {
+    if (!ENABLE_FIX_TEMPLATE_HUB || !win) return;
+    const s = getSettings();
+    const name = (win.querySelector('#so-fixc-template') || {}).value || '';
+    const blocked = fixHubShareBlockedReason(name, s, fixTplDirty);
+    if (blocked) { if (typeof toastr !== 'undefined') toastr.info(blocked); return; }
+    const tpl = normalizeFixTemplates(s.fixTemplates).find((t) => t.name === name);
+    const el = buildFixShareCard();
+    const seq = ++fixShareOpenSeq;
+    el.querySelector('#so-fixshare-name').value = tpl.name;
+    el.querySelector('#so-fixshare-prompt').value = tpl.prompt;
+    let author = '';
+    try { author = localStorage.getItem(FIX_HUB_AUTHOR_KEY) || ''; } catch (e) { author = ''; }
+    el.querySelector('#so-fixshare-author').value = author;
+    el.querySelector('#so-fixshare-desc').value = '';
+    el.querySelector('#so-fixshare-model').value = '';
+    el.querySelector('#so-fixshare-copybox').hidden = true;
+    el.querySelector('#so-fixshare-copy').classList.remove('so-fixshare-go');
+    fixHubShowErrors(el, []);
+    el.querySelector('#so-fixshare-submit').hidden = !fixHubWorkerUrl();
+    el.querySelector('#so-fixshare-tags').textContent = '';
+    el._soTags = FIX_HUB_TAGS_FALLBACK;
+    el._soKnown = null;
+    fixHubShareRenderTags(el, el._soTags);
+    fixHubShareRenderUpdate(el, null);
+    el.classList.add('open');
+    // 广场：先认内存 / 缓存（与广场卡同一份状态），都没有才联网。
+    if (!fixHubState.lib) {
+        const cached = fixHubCacheRead();
+        const parsed = cached ? fixHubParseLibrary(cached.body) : null;
+        if (parsed && parsed.ok) Object.assign(fixHubState, { lib: parsed.lib, source: 'cache', fetchedAt: cached.fetchedAt });
+    }
+    const r = await fixHubLoadLibrary({ force: false });
+    if (seq !== fixShareOpenSeq || !el.classList.contains('open')) return;
+    const libNow = r.ok ? r.lib : null;
+    el._soTags = libNow && libNow.tags.length ? libNow.tags : FIX_HUB_TAGS_FALLBACK;
+    el._soKnown = libNow ? libNow.templates.map((t) => t.id) : null;
+    fixHubShareRenderTags(el, el._soTags);
+    fixHubShareRenderUpdate(el, libNow);
+}
+
+function closeFixShare() {
+    fixShareOpenSeq += 1;
+    const el = win && win.querySelector('#so-fixshare');
+    if (el) el.classList.remove('open');
+}
+
 // ✨ 自动校正提示词选择器（纯映射，设计 §4）：把归一后的 {promptVersion, promptFlavor} 映射到具体系统提示常量。
 //   version !== 'thorough' → 轻校 = FIX_SYSTEM_PROMPT_TIGHTEN（今天的现行提示，默认，byte 不变）
 //   thorough + flavor==='opus'   → FIX_PROMPT_JINGXIAO_OPUS（对「数据包腔」强攻，适合 Claude / Opus）
@@ -7020,6 +7808,9 @@ function buildDirective(plan) {
 // empty string when there is none. Always safe to call; returns false only when
 // this ST build has no setExtensionPrompt at all.
 function applyPlanInjection() {
+    // 🧭 1.87.0 下一拍建议：拍的一切变动（采用 / 完成推进 / 跳过 / ✏️ 编辑 / 强度 / 修订 / 放弃 / 切聊天）都经这里重登记——
+    // 在这一处对卡：旧拍的候选与在途请求就地作废。
+    if (ENABLE_NEXT_BEAT) nbeatOnGuidanceChanged();
     const ctx = getCtx();
     if (typeof ctx.setExtensionPrompt !== 'function') { if (ENABLE_DB_BRIDGE) dbBridgePublish(null); return false; }
     const s = getSettings();
@@ -7062,7 +7853,11 @@ function applyPlanInjection() {
         console.warn('[Story Oracle] seq pulse setExtensionPrompt failed:', e);
     }
     try {
-        ctx.setExtensionPrompt(ADVISOR_PROMPT_KEY, text, pos, depth, false, role);
+        // 🧭 1.85.2：scan=true（第 5 参）——引导文本里点名的 NPC/地点关键词要能扫进世界书触发绿灯
+        // 条目，否则模型只能瞎编人设（Discord 报障 + 根因核实：ST 只把 extensionPrompts[key].scan
+        // 为真的槽塞进 world-info.js 的 WI 扫描缓冲，见 checkWorldInfo）。盲盒拍一并纳入——Prince
+        // 已接受。落拍感应槽（上面）不跟——协议措辞通用，误触发世界书条目代价更大，仍是 false。
+        ctx.setExtensionPrompt(ADVISOR_PROMPT_KEY, text, pos, depth, true, role);
         // 🧭 1.78.0：注册成功才发布快照（与槽里的文本同源）；空文本 = 清掉。
         if (ENABLE_DB_BRIDGE) {
             dbBridgePublish(text ? { chatId: dbBridgeChatId(ctx), kind: active.type, directive: text, intensity: intensity || 'normal' } : null);
@@ -7799,13 +8594,17 @@ function seqPulseNonce(prev) {
     return n;
 }
 
-// 协议段草案——语义钉死、措辞待验收电池调优后字节冻结（spec §3/§9）。{{BEAT}}/{{NONCE}} 为占位。
+// 协议段——语义钉死、措辞由验收电池定稿后【字节冻结】（spec §3/§9）。{{BEAT}}/{{NONCE}} 为占位。
+// 631B（1.73.0 定稿）→ 770B（1.85.0：末行追加「码一变就是新目标…」一句，治「多段目标写了前半段就报已达成」；
+// 电池 ROUND-1 opus-4.8 代表格 4/10 → 0/10、Fisher 单侧 p=0.0433，台账 tests/unit/_seq-tuning/_pulse/ROUNDS.md）。
+// 改一个字节 = 重跑 _pulse 验收电池并同步 _feeds.mjs 的冻结副本。
 const SEQ_PULSE_PROTOCOL = `【序列状态行（系统协议）】
 你每条正文的最末尾必须原样输出一行状态标签，报告上方剧情推进指令中当前目标的落实情况：
 <so_seq>拍={{BEAT}} 码={{NONCE}} 状态=进行中</so_seq>
 仅当该目标已在你本次回复的正文中完整发生（不是计划、预告、回忆或对话提及）时，改报：
 <so_seq>拍={{BEAT}} 码={{NONCE}} 状态=已达成 证据=「逐字摘自本次正文中能证明它的一句原话」</so_seq>
-规则：标签每次只出现一次、贴正文最末；拍与码原样照抄；这行是给引导系统读的锚点，请务必每次输出。`;
+规则：标签每次只出现一次、贴正文最末；拍与码原样照抄；这行是给引导系统读的锚点，请务必每次输出。
+码一变就是新目标：历史里旧码的状态标签不作数。本次只写到起始迹象或目标的一部分，仍是进行中。`;
 
 function buildSeqPulsePrompt(seq) {
     const b = seqActiveBeat(seq);
@@ -7814,17 +8613,117 @@ function buildSeqPulsePrompt(seq) {
 }
 
 // 解析：matchAll（不共享 lastIndex——/g 正则跨调用带状态是仓内已知雷）；多行取最后一条合法的。
-// 证据引号容错（Batch D，Prince 2026-09-02 批）：「」/“”/"" 三对都收（电池 30/32 解析的两条 flash miss 就是 “” 行）；
-// 冻结协议文仍只教「」——这里只是容忍。三对各占一个捕获组（m[4]/m[5]/m[6]），错配（“…」）整行不合法。
-const SEQ_PULSE_LINE_RE = /<so_seq\b[^>\r\n]*>\s*拍\s*=\s*(\d+)\s+码\s*=\s*([A-Z0-9]{4})\s+状态\s*=\s*(进行中|已达成)(?:\s+证据\s*=\s*(?:「([^」\r\n]*)」|“([^”\r\n]*)”|"([^"\r\n]*)"))?\s*<\/so_seq>/g;
+// 证据捕获（1.84.2）：取【证据= 之后、同一行 </so_seq> 之前】的全部内容，非贪婪。真机实证：写「」对白的卡上，
+// 模型给的证据句天生带嵌套引号与尾随叙述（「甲，」他说，「乙。」），旧式「引号内不得再出现闭引号 + 闭引号后必须
+// 紧跟 </so_seq>」把整行判成不合法 → verdict 'no-line' → 罗盘永不点亮（不是 'quote-missing'，连诊断计数
+// 都落不到；Prince 活聊天 5 条【已达成】里 4 条倒在这，全盘扫描的严格解析拒绝也全是这一形状）。
+// 引号只在解析侧各剥一个（首 SEQ_PULSE_QUOTE_OPEN / 尾 SEQ_PULSE_QUOTE_CLOSE，独立判定——故错配 “…」 也收）；
+// 冻结的 SEQ_PULSE_PROTOCOL 仍只教「」，这里只是容忍。行仍整条匹配，replace 剥除（自引用闸）不受影响。
+const SEQ_PULSE_LINE_RE = /<so_seq\b[^>\r\n]*>\s*拍\s*=\s*(\d+)\s+码\s*=\s*([A-Z0-9]{4})\s+状态\s*=\s*(进行中|已达成)(?:\s+证据\s*=\s*([^\r\n]*?))?\s*<\/so_seq>/g;
+const SEQ_PULSE_QUOTE_OPEN = '「“"';
+const SEQ_PULSE_QUOTE_CLOSE = '」”"';
+function stripSeqPulseQuotes(raw) {
+    let t = String(raw ?? '').trim();
+    if (t && SEQ_PULSE_QUOTE_OPEN.includes(t[0])) t = t.slice(1);
+    if (t && SEQ_PULSE_QUOTE_CLOSE.includes(t[t.length - 1])) t = t.slice(0, -1);
+    return t.trim();
+}
 function parseSeqPulseLine(text) {
     const ms = [...String(text ?? '').matchAll(SEQ_PULSE_LINE_RE)];
     if (!ms.length) return null;
     const m = ms[ms.length - 1];
-    return { beatId: parseInt(m[1], 10), nonce: m[2], status: m[3], quote: (m[4] || m[5] || m[6] || '').trim(), count: ms.length };
+    return { beatId: parseInt(m[1], 10), nonce: m[2], status: m[3], quote: stripSeqPulseQuotes(m[4]), count: ms.length };
 }
 
-const SEQ_PULSE_QUOTE_MIN = 6;   // 证据最短码点数——防「他。」式空泛引文
+const SEQ_PULSE_QUOTE_MIN = 6;   // 证据（归一后）最短码点数——防「他。」式空泛引文
+const SEQ_PULSE_FRAG_MIN = 4;    // 单片（归一后）最短码点数——「他说」这类连接残片不参与判定
+// 归一：抹掉一切标点 / 符号 / 分隔符 / 空白。真机上模型会把全角写成半角、把段落换行压掉，
+// 这类漂移不该杀掉一句真证据；抹掉后仍要求逐字连续，所以对「热心谎报」的约束强度不变。
+const SEQ_PULSE_NOISE_RE = /[\p{P}\p{S}\p{Z}\s]/gu;
+// 切片：省略号（……/…/...）与引号都是「此处有省略 / 此处换人说话」的信号——模型常把跨段落的一段
+// 缩写成 A……B……C，整串在正文里找不到，但每一片都在。切完各自独立找。
+const SEQ_PULSE_FRAG_SPLIT_RE = /…|\.{3,}|[「」“”"]/;
+const seqPulseNorm = (s) => String(s ?? '').replace(SEQ_PULSE_NOISE_RE, '');
+function seqPulseFragments(quote) {
+    return String(quote ?? '').split(SEQ_PULSE_FRAG_SPLIT_RE)
+        .map(seqPulseNorm).filter((f) => [...f].length >= SEQ_PULSE_FRAG_MIN);
+}
+/* 🔔 grounding 专用正文（1.84.3）——只服务「证据是不是真写进了故事里」这一个判断，绝不影响显示 /
+ * 落盘 / 提示词（seqPulseVerdict 是唯一用户）。
+ * 为什么要有它：卡片会在同一条回复里写【非叙述】文本，而那些文本常常【逐字复述】我们注入的这一拍
+ * 目标与种子句（Prince 活聊天的 <konatan_planning~> 规划块 ≈1000 字，种子句在里面出现两次）——
+ * 只剥 so_seq 行的话，模型【只规划、没写】也能拿规划块里的句子当证据过闸。
+ * 剥四类：① MVU 更新块（名字只认生产权威 MVU_BLOCK_DIALECTS，绝不手搓标签正则——mvu-facts ①）
+ * ② 思维链（REASONING_TAGS，同 stripReasoningTags / Zone-2 的唯一名单）③ 卡自带的规划块
+ * （SEQ_PULSE_PLAN_TAGS）④ 本聊天用户自己声明的校正保留区 / 丢弃区（他已经声明「这不是散文」）。*/
+// 卡自带的思维链 / 规划容器标签名（裸名；真机开标签可带尾缀，如 <konatan_planning~>）。
+// 入选标准 = _piecewise/corpus 里【实证】为写作前的规划 / 审理容器：konatan_planning（step.1 规划）、
+// draft_notes（剧情设计 / 本回合梳理）、logic_check（【审理】【衡平】【天道】三段自查）。
+// 像 <tucao>（写完后的自评吐槽）/ <now_plot> / <writing_style> 这类不是规划容器，有意不收。
+const SEQ_PULSE_PLAN_TAGS = ['konatan_planning', 'draft_notes', 'logic_check'];
+// 断口：剥掉一块后在原处留一个字符，防止两侧文字被接成一段【原回复里没有过】的连续串（那会让
+// grounding 变松）。私用区码位 U+E000——seqPulseNorm 只抹标点 / 符号 / 分隔符 / 空白，它活得下来；
+// 模型的证据里不可能有它，于是任何跨断口的片段必然匹配失败（失败方向 = 更严，符合设计）。
+const SEQ_PULSE_CUT_MARK = '\uE000';
+
+// 纯函数：把 specs（[{name,bracket}]）里【配平且闭合】的整块换成断口。匹配形状照
+// extractExcludedSections（同一套 nb 名字边界 + 深度配平，故 <plan> 不误吃 <planning>、嵌套同名取最外层），
+// 唯独【不抄它那条「开了没闭 → 取到结尾」】：在 grounding 上那条规则会把整段正文吞掉 = 真落拍被判成
+// 没落（正是 1.84.2 刚修掉的那类缺陷）。深度 0 的孤立闭标签同样忽略（绝不从开头吃到闭标签）。
+function seqPulseCutClosedBlocks(text, specs) {
+    let out = String(text ?? '');
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const nb = '(?![A-Za-z0-9_\\u4e00-\\u9fa5-])';
+    for (const spec of (specs || [])) {
+        const name = (spec && typeof spec.name === 'string') ? spec.name : '';
+        if (!name) continue;
+        const n = esc(name);
+        const openSrc = spec.bracket ? ('\\[' + n + nb + '[^\\]]*\\]') : ('<' + n + nb + '[^>]*>');
+        const closeSrc = spec.bracket ? ('\\[\\/' + n + nb + '[^\\]]*\\]') : ('<\\/' + n + nb + '[^>]*>');
+        const tokRe = new RegExp('(' + openSrc + ')|(' + closeSrc + ')', 'gi');
+        const spans = [];
+        let depth = 0, spanStart = -1, m;
+        while ((m = tokRe.exec(out)) !== null) {
+            if (m[1] != null) { if (depth === 0) spanStart = m.index; depth += 1; }
+            else if (depth > 0) { depth -= 1; if (depth === 0) spans.push([spanStart, m.index + m[0].length]); }
+        }
+        if (!spans.length) continue;                     // depth>0 的未闭合尾巴：有意【不】收
+        let next = '', last = 0;
+        for (const [a, b] of spans) { next += out.slice(last, a) + SEQ_PULSE_CUT_MARK; last = b; }
+        out = next + out.slice(last);
+    }
+    return out;
+}
+
+// 本聊天【自动校正】的保留区 / 丢弃区标签（用户亲手声明的「这几块不是散文」）。读不到设置 / 没有
+// ST 环境 → 空数组，只丢这一档，其余排除照常（typeof 全守，落拍绝不因校正设置缺席而抛）。
+function seqPulseFixExcludeSpecs() {
+    try {
+        if (typeof getSettings !== 'function' || typeof getFixCfg !== 'function'
+            || typeof getEffectiveFixCfg !== 'function' || typeof resolveFixModeCfg !== 'function'
+            || typeof parseExcludeTags !== 'function') return [];
+        const a = resolveFixModeCfg(getEffectiveFixCfg(getSettings(), getFixCfg()), 'auto');
+        return [...parseExcludeTags(a && a.keepTags), ...parseExcludeTags(a && a.dropTags)];
+    } catch (e) { return []; }
+}
+
+// grounding 正文本体。任何异常 → 逐字回退到 1.84.2 的正文（只剥 so_seq 行）＝ fail-open 到今天的行为。
+function seqPulseGroundingBody(replyText) {
+    const plain = String(replyText ?? '').replace(SEQ_PULSE_LINE_RE, '');
+    try {
+        const specs = [];
+        for (const d of MVU_BLOCK_DIALECTS) if (mvuDialectInnerOk(plain, d)) specs.push({ name: d.wrapper, bracket: false });
+        for (const t of REASONING_TAGS) specs.push({ name: t, bracket: false });
+        for (const t of SEQ_PULSE_PLAN_TAGS) specs.push({ name: t, bracket: false });
+        for (const sp of seqPulseFixExcludeSpecs()) specs.push(sp);
+        const cut = seqPulseCutClosedBlocks(plain, specs);
+        return (typeof cut === 'string') ? cut : plain;
+    } catch (e) {
+        console.warn('[Story Oracle] 落拍 grounding 正文排除失败，按 1.84.2 口径判定。', e);
+        return plain;
+    }
+}
+
 function seqPulseVerdict(replyText, seq) {
     const b = seqActiveBeat(seq);
     if (!b) return { hint: false, reason: 'no-active' };
@@ -7833,10 +8732,16 @@ function seqPulseVerdict(replyText, seq) {
     if (p.beatId !== b.id) return { hint: false, reason: 'beat-mismatch' };
     if (!seq.pulseNonce || p.nonce !== seq.pulseNonce) return { hint: false, reason: 'nonce-mismatch' };
     if (p.status !== '已达成') return { hint: false, reason: 'ongoing' };
-    // grounding：证据必须逐字出现在【剥掉全部 so_seq 行后】的正文里（自引用不算）
-    const body = String(replyText ?? '').replace(SEQ_PULSE_LINE_RE, '');
+    // grounding（1.84.2）：在【剥掉全部 so_seq 行后】的正文里找（自引用不算）——先标点归一，再按
+    // 省略号 / 引号切片，每一片都必须仍是正文的子串。模型自行重组语序的转述会在某一片上断掉，
+    // 陈旧复读一片都命不中 → 两者仍判 quote-missing。这道闸是「热心谎报」的唯一杀手，一分不松。
+    // 1.84.3：正文改由 seqPulseGroundingBody 给——同一条回复里的【非叙述】文本（卡的规划块 / 思维链 /
+    // MVU 更新块 / 用户声明的排除区）也不算数，因为它们常逐字复述我们注入的目标与种子句。
+    const body = seqPulseNorm(seqPulseGroundingBody(replyText));
     const q = p.quote;
-    if ([...q].length < SEQ_PULSE_QUOTE_MIN || !body.includes(q)) return { hint: false, reason: 'quote-missing' };
+    if ([...seqPulseNorm(q)].length < SEQ_PULSE_QUOTE_MIN) return { hint: false, reason: 'quote-missing' };
+    const frags = seqPulseFragments(q);
+    if (!frags.length || !frags.every((f) => body.includes(f))) return { hint: false, reason: 'quote-missing' };
     return { hint: true, quote: q, reason: 'ok' };
 }
 
@@ -8045,6 +8950,612 @@ function removeSeqPulseHideRegex() {
 function syncSeqPulseHideRegex() {
     if (ENABLE_SEQ_PULSE && getSettings().seqPulse !== false) ensureSeqPulseHideRegex();
     else removeSeqPulseHideRegex();
+}
+
+/* ------------------------------------------------------------------ *
+ * 🧭 下一拍建议（1.87.0，ENABLE_NEXT_BEAT）
+ * 并入自社区插件「故事神谕 · 下一拍建议」v3.7.1（GitHub yacovonebeswick-art/story-oracle-next-beat；作者授权并入，
+ * 原版存档 tests/unit/_next-beat/addon-3.7.1/ 作参照）。并入时的改动（全录 changelog 1.87.0）：
+ *   · 只在序列引导进行中生效（getActiveConstruct().type === 'seq' 且有当前拍）；拍的信息进程内直读，删掉原版每秒一次的
+ *     整页 ▶ 扫描——拍一变经 applyPlanInjection 钩子（nbeatOnGuidanceChanged）就地作废旧候选与在途请求。
+ *   · 连接 / 破限 / 输出上限全用神谕自己的（soCallModel · maybeWrapJb(…,'advisor') · max(maxTokens, 4096)）。
+ *   · 提示词改写成通用版：保留配比 / 分镜拍 / 接续锁 / 「玩家不全知·有反应·不稳赢」/ 输出契约，去掉作者自用的玩家人设
+ *     （普通人化、冷 / 玩味文风、禁感叹号、屏蔽词），改成跟随喂进去的 Persona 与角色卡。NBEAT_SYSTEM_PROMPT /
+ *     NBEAT_DEFAULT_TEMPLATE 由 next-beat-prompt.test.mjs 按字节钉住——改就是有意的改，顺手重跑 _next-beat/real-check。
+ *   · 结果按「楼号 + swipe + 正文指纹 + 拍签名」钉在【本聊天】metadata（只存最新一份），刷新不丢；换 swipe / 改楼 / 换拍即作废。
+ *   · 点选项 = 追加进输入框（已有文字时另起一行），绝不覆盖、绝不代发。
+ * ------------------------------------------------------------------ */
+const NBEAT_META_KEY = MODULE + '_nbeat';       // 本聊天最新一份候选：{ msgKey, beatSig, options, at }
+const NBEAT_MIN_TOKENS = 4096;                  // 输出上限地板（原版同值）
+const NBEAT_CHARS_MIN = 100;                    // 最新回复截取上限的可调范围（原版同值）
+const NBEAT_CHARS_MAX = 20000;
+const NBEAT_CHARS_DEFAULT = 4000;
+const NBEAT_MIN_NARRATIVE = 10;                 // 清洗后正文短于这个字数 = 没有可接续的东西，不发请求
+const NBEAT_WI_MAX_CHARS = 12000;               // 世界书块软上限（按条目边界截）：这是一次轻量调用，不该被整本设定撑爆
+const NBEAT_MAX_OPTIONS = 10;                   // 候选行上限（防模型刷屏）
+const NBEAT_AUTO_WAIT_MS = 180000;              // 自动生成先等回复后编排（自动校正 / 诊断）收尾的上限
+const NBEAT_LBL_USER = '我';
+const NBEAT_LBL_TIME = '时间';
+// 分镜 / 转场拍判据——只看【拍标题】（原作者 3.7.x 刻意删掉「同时 / 另一边」：普通拍标题里太常见、误判会让「我」条一条不出）。
+// 原版的「分镜拍」与「分镜」重复，未收。命中时提示词里才出现分镜段、解析端才剔「我」条——提示词与代码同一个判据。
+const NBEAT_CUTSCENE_KEYWORDS = ['分镜', '转场', '切到', '视角切', 'B线', '支线'];
+// 不可能是「在场角色称呼」的标签（模型回显的元信息 / 人称代词）。角色标签另须出现在喂给它的材料里（nbeatLabelOk）。
+const NBEAT_META_LABELS = [
+    '选项', '注意', '说明', '备注', '提示', '分析', '思考', '总结', '格式', '输出', '示例', '正面示例', '反面示例', '标签',
+    '场景', '目标', '本拍目标', '本拍标题', '序列', '数量', '配比', '接续', '信息源', '信息边界', '维度', '长短', '写法',
+    '温度', '禁词', '终检', '自检', '检查', '理由', '安排理由', '角色', '角色名', '旁白', '叙事', '叙事者', '系统', '作者',
+    '玩家', '用户', '你', '他', '她', '它', '我们', '你们', '他们', '她们', 'Note', 'Tip', 'User', 'user',
+];
+// 系统提示词（通用版，1.87.0 重写；原作者的 SYSTEM_PROMPT + 导演锁 + 接续自检 见 addon-3.7.1/index.js）。
+const NBEAT_SYSTEM_PROMPT = `你为一场角色扮演准备「玩家下一步可以发送的内容」候选。玩家会挑一条（或改一改）发给叙事模型，叙事模型再据此写下一段正文——每条候选都是下一段正文的种子。
+
+【数量与配比】
+- 普通拍：共 4~7 条。3 条「我」：玩家自己的动作 / 台词，第一人称；1~3 条正文里在场的其他角色：该角色对玩家的动作 / 台词；0~1 条「时间」：换场或时间推进，只在本拍目标确实需要换场、跳时间时给。
+- 分镜 / 转场拍（材料里会明确标出）：玩家不在那个场景——0 条「我」；2~4 条写那条线里的角色；1 条「时间」作为切入（例如「时间：与此同时，……」）。
+
+【接续】
+- 最新正文末尾的人物、地点、关系状态是候选的起点：除「时间」条外，每条都紧接那一刻往下走，至少一条是对最后一句的即时回应（分镜拍从那条线的当下写起）。
+- 每条都让剧情朝本拍目标挪近一步或为它铺路。本拍目标是这一拍要走向的结果，不是这一拍的开头：正文末尾与目标隔着地点、时间或关系的变化时，候选里至少有一条写中间那一步（起身离开、开口提议、对方递来信号……），不直接写目标场景里的动作。
+
+【人物】
+- 「我」的言行、见识与说话方式贴合材料里的玩家人设（Persona）和正文里一贯的玩家；其他角色贴合角色卡、世界书与正文里的性格和口吻。
+- 玩家不全知：只知道自己看到、听到、经历过或能合理推断的事——不预知对方下一步，不一句话点破对方心思。
+- 玩家有反应：面对质问、摊牌、亲近、冲突，总有具体的东西在动，分量与刚发生的事相称；人物可以冷淡、克制，但写出来的不是只剩动作骨架的流程句。
+- 玩家不稳赢：每条是玩家迈出的一步——不替对方写反应，不写成一开口就占上风、一切尽在掌握。
+
+【输出】
+每条一行，行首是「标签：」，后接内容：
+我：……（玩家的动作 / 台词，主语是「我」）
+角色名：……（把「角色名」换成正文里对这个角色的称呼）
+时间：……（时间推进或换场）
+只输出候选行本身：不编号、不加项目符号或标题，不输出分析、自检、说明或模板原文；不写材料里没出现过的人物。`;
+// 选项写法默认值（设置里可改写 / 清空；nextBeatTemplate === null 时用它）。取自原作者「午夜提词器」模板里能通用的部分：
+// MBTI 八维选路池、长短随人设、动作 + 台词写法、套话表、四条反面示例；去掉冷 / 玩味文风、禁感叹号与重复的格式 / 自检段。
+const NBEAT_DEFAULT_TEMPLATE = `- 选路要分散：每条从 MBTI 八维（Ne / Fe / Se / Te / Ni / Fi / Si / Ti）里取一种不同的驱动，挑当下最成立的几种；选项正文里不出现这些名称。
+- 长短随人设：话多的人 2~3 句，寡言的人 1~2 句，其余 1~2 句。
+- 写法：一个看得见的动作，或动作加台词（动作："台词。"）；不写对方的反应、内心独白，也不写「因为……」式的解释。
+- 少用套话：轻轻、缓缓、微微、淡淡、不由得、忍不住、仿佛、宛如、似乎、眼底、嘴角一勾、眸色一暗、周身气场。
+- 反面示例（不要这样写）：
+✗ 我：我早知道他会在这一刻开口。（预知）
+✗ 我：我靠在椅背上，没什么表情。（零反应）
+✗ 我：我笑了一下："怎么，终于想通了？"（一开口就占上风）
+✗ 我：我说完，他的脸色变了。（替对方写反应）`;
+
+// ---- 纯函数层（可单测）----
+// 小哈希（djb2 变体，32 位 → base36）：只做「变没变」的指纹，不做安全用途。
+function nbeatHash(str) {
+    let h = 5381;
+    const s = String(str ?? '');
+    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+}
+function nbeatClampChars(v) {
+    const n = Number(v);
+    if (v === '' || v == null || !Number.isFinite(n)) return NBEAT_CHARS_DEFAULT;
+    return Math.max(NBEAT_CHARS_MIN, Math.min(NBEAT_CHARS_MAX, Math.round(n)));
+}
+function nbeatMaxTokens(s) {
+    return Math.max(Number(s && s.maxTokens) || 0, NBEAT_MIN_TOKENS);
+}
+// 选项写法：null / 缺键 = 内置默认；字符串（含 '' = 用户清空）原样。
+function nbeatTemplateText(s) {
+    const v = s ? s.nextBeatTemplate : null;
+    return (v === null || v === undefined) ? NBEAT_DEFAULT_TEMPLATE : String(v);
+}
+function nbeatIsCutscene(beat) {
+    const title = String((beat && beat.title) || '');
+    return NBEAT_CUTSCENE_KEYWORDS.some((kw) => title.includes(kw));
+}
+// 候选挂在哪一楼：最后一条【非系统】消息必须是 AI 的非空回复；玩家已经说了下一句（最后是玩家楼）= 不挂。
+function nbeatTargetIndex(chat) {
+    const list = Array.isArray(chat) ? chat : [];
+    for (let i = list.length - 1; i >= 0; i--) {
+        const m = list[i];
+        if (!m || m.is_system) continue;
+        if (m.is_user) return -1;
+        return (typeof m.mes === 'string' && m.mes.trim()) ? i : -1;
+    }
+    return -1;
+}
+// 回复正文的叙述部分：剥落拍状态行（so_seq）、MVU 更新块、思维链。指纹与提示词共用这一口径——
+// 自动诊断事后往楼里写回更新块不算「正文变了」，候选不因此作废。
+function nbeatCleanReply(text) {
+    const t = String(text ?? '').replace(SEQ_PULSE_LINE_RE, '');
+    return stripReasoningTags(stripMechanismBlocks(t)).trim();
+}
+// 截取正文【末尾】max 字（接续从末尾出发，开头最不要紧）。
+function nbeatClip(text, max) {
+    const t = String(text ?? '');
+    return t.length > max ? t.slice(-max) : t;
+}
+function nbeatCapBlock(text, max) {
+    const t = String(text ?? '');
+    if (t.length <= max) return t;
+    const cut = t.lastIndexOf('\n\n', max);
+    return (cut > max * 0.5 ? t.slice(0, cut) : t.slice(0, max)) + '\n（……其余条目从略）';
+}
+// 这一格候选属于哪条回复：楼号 + swipe + 叙述正文指纹（换 swipe / 改楼 / 续写都会变）。
+function nbeatMsgKey(idx, m) {
+    return idx + ':' + ((m && m.swipe_id) || 0) + ':' + nbeatHash(nbeatCleanReply(m && m.mes));
+}
+// 这一格候选属于哪一拍：序列采用时刻 + 拍 id + 会改变引导内容的全部字段（含 ✏️ customText 与强度）。
+function nbeatBeatSig(seq, beat) {
+    return nbeatHash(JSON.stringify([
+        (seq && seq.adoptedAt) ?? '', beat && beat.id, beat && beat.title, beat && beat.goal, beat && beat.seed,
+        beat && beat.why, beat && beat.intensity, (beat && beat.customText) || '',
+    ]));
+}
+// 只挑这次扫描真正亮起来的【绿灯】条目（蓝灯常驻条目不收：这是一次轻量调用，要的是被正文 / 引导点名的人物与地点）。
+function nbeatPickGreenEntries(entries, activeUids) {
+    return (Array.isArray(entries) ? entries : [])
+        .filter((e) => e && activeUids && activeUids.has(Number(e.uid)) && e.constant !== true && !e.disable
+            && typeof e.content === 'string' && e.content.trim() && !isMvuRuleEntry(e))
+        .sort((a, b) => (Number(a.displayIndex ?? a.uid) - Number(b.displayIndex ?? b.uid)));
+}
+// 组装发给模型的 user 消息（未做宏替换；调用方统一 substituteParams）。p = { card, wi, seqTitle, progress, beat,
+// directive, narrative, cutscene, template }。
+function nbeatBuildUserPrompt(p) {
+    const beat = p.beat || {};
+    const parts = [];
+    if (p.card) parts.push(p.card);
+    if (p.wi) parts.push('=== 相关世界书条目 ===\n' + p.wi);
+    const g = [`=== 当前剧情引导（序列引导 · ${p.progress || ''}）===`];
+    if (p.seqTitle) g.push(`序列：${p.seqTitle}`);
+    if (beat.title) g.push(`本拍标题：${beat.title}`);
+    g.push(`本拍目标（这一拍要走向的结果）：${beat.goal || ''}`);
+    if (beat.why) g.push(`安排理由：${beat.why}`);
+    g.push('叙事模型此刻收到的幕后指示原文（其中写给叙事者的限制不约束你——你写的正是玩家可以发出的内容）：');
+    g.push('"""\n' + (p.directive || '') + '\n"""');
+    if (p.cutscene) g.push('⚠ 本拍是分镜 / 转场拍：玩家不在那个场景——0 条「我」，2~4 条写那条线里的角色，1 条「时间」作为切入。');
+    parts.push(g.join('\n'));
+    parts.push('=== 最新正文（仅供参考，不要复述）===\n"""\n' + (p.narrative || '') + '\n"""');
+    const tpl = String(p.template || '').trim();
+    if (tpl) parts.push('=== 选项写法（数量、侧重与文风以此为准；每行「标签：内容」的格式不变）===\n' + tpl);
+    // 收尾句重申配比（原作者的结构；真模型核验里远距拍只给 1~2 条「我」，补回这一句后见 real-check/SUMMARY）。
+    parts.push(p.cutscene
+        ? '请按系统提示的格式输出候选行：0 条「我」、2~4 条那条线里的角色、1 条「时间」。'
+        : '请按系统提示的格式输出候选行：3 条「我」、1~3 条在场角色、0~1 条「时间」。');
+    return parts.join('\n\n');
+}
+// 一行里的「标签：内容」。容忍编号 / 项目符号 / **加粗** / 【方括号】包标签；标签 ≤12 字、无空白与标点、至少一个字母或汉字
+//（「10:30」这类时间不会被当成标签）。内容从归一后的行里取（原版从原行取，「**我：**内容」会留下「**内容」）。
+function nbeatSplitLabel(line) {
+    let s = String(line ?? '').trim();
+    s = s.replace(/^(?:[-•·]|\*(?!\*)|\d{1,2}[.)、）]|[A-Za-z][.)](?=\s))\s*/, '');
+    const wrap = s.match(/^(?:\*\*([^*\n]+?)\*\*|[【〔[]([^】〕\]\n]{1,14})[】〕\]])\s*([\s\S]*)$/);
+    if (wrap) {
+        const inner = String(wrap[1] ?? wrap[2]).trim();
+        const rest = wrap[3];
+        if (/^[^：:]+[：:]$/.test(inner)) s = inner + rest;
+        else if (!/[：:]/.test(inner)) s = inner + (/^[：:]/.test(rest) ? '' : '：') + rest;
+        else s = inner + rest;
+    }
+    const m = s.match(/^([^：:\s]{1,12})\s*[：:]\s*(.+)$/);
+    if (!m) return null;
+    let label = m[1].trim();
+    const content = m[2].replace(/\*\*\s*$/, '').trim();
+    if (!label || !content) return null;
+    if (/[。！？，、；“”「」『』"'（）()《》…—]/.test(label)) return null;
+    if (!/\p{L}/u.test(label)) return null;
+    if (label === '时间推进' || label === '换场') label = NBEAT_LBL_TIME;
+    return { label, content };
+}
+function nbeatIsJunkLine(line) {
+    const t = String(line ?? '').trim();
+    if (!t) return true;
+    if (/^#{1,6}\s/.test(t)) return true;
+    if (/^Vol\.\d/i.test(t)) return true;
+    if (/✗/.test(t)) return true;                        // 模型回显的反面示例
+    if (/___/.test(t)) return true;
+    if (/(自检|终检|检查方式|输出边界)/.test(t)) return true;
+    if (/^```/.test(t)) return true;
+    if (/^<\/?[A-Za-z_][\w-]*[^>]*>$/.test(t)) return true;   // 单独一行的标签
+    return false;
+}
+// 标签合法：我 / 时间；否则不是元信息 / 人称代词，且确实出现在喂给模型的材料里（原版任何 ≤12 字的词都收——
+// 回显的「数量：3 条…」「注意：…」都会被当成角色选项）。
+function nbeatLabelOk(label, known) {
+    if (label === NBEAT_LBL_USER || label === NBEAT_LBL_TIME) return true;
+    if (NBEAT_META_LABELS.includes(label)) return false;
+    return !!known && String(known).includes(label);
+}
+// 解析模型回复 → [{label, content}]。opts.known = 材料文本（判角色标签）；opts.cutscene = 分镜拍（代码侧剔掉「我」条）。
+function nbeatParseOptions(text, opts = {}) {
+    const known = String(opts.known ?? '');
+    const out = [];
+    const seen = new Set();
+    for (const raw of stripReasoningTags(String(text ?? '')).split(/\r?\n/)) {
+        if (nbeatIsJunkLine(raw)) continue;
+        const p = nbeatSplitLabel(raw);
+        if (!p || !nbeatLabelOk(p.label, known)) continue;
+        if (opts.cutscene && p.label === NBEAT_LBL_USER) continue;
+        const k = p.label + '\u0001' + p.content;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push(p);
+        if (out.length >= NBEAT_MAX_OPTIONS) break;
+    }
+    return out;
+}
+// 填进输入框的文字：「我」「时间」只取内容；角色条保留「称呼：」——玩家是在指挥那个角色。
+function nbeatFormatForInput(opt) {
+    const label = String((opt && opt.label) || '').trim();
+    const content = String((opt && opt.content) || '').trim();
+    if (!label || label === NBEAT_LBL_USER || label === NBEAT_LBL_TIME) return content;
+    return label + '：' + content;
+}
+// 追加规则：输入框空 → 直接放；已有文字 → 去掉尾部空白后另起一行接上（绝不覆盖玩家打了一半的字）。
+function nbeatAppendToInput(current, addition) {
+    const add = String(addition ?? '');
+    const cur = String(current ?? '');
+    if (!cur.trim()) return add;
+    return cur.replace(/\s+$/, '') + '\n' + add;
+}
+
+// ---- 运行态（单槽：同一时刻只有「最新一楼 × 当前拍」这一格有意义）----
+let nbeatState = null;          // { key, status:'busy'|'done'|'error', options?, error?, ctl?, timedOut? }
+let nbeatAutoKey = '';          // 最近一次自动生成的格子键（同一格只自动跑一次）
+let nbeatRefreshTimer = null;
+
+// 闸 + 定位：旗 · 设置 · 当前构件是序列且有当前拍 · 最后一条非系统消息是 AI 回复。任何一条不满足 → null。
+function nbeatCurrent() {
+    if (!ENABLE_NEXT_BEAT) return null;
+    const s = getSettings();
+    if (!s.nextBeatEnabled) return null;
+    const active = getActiveConstruct();
+    if (!active || active.type !== 'seq') return null;
+    const beat = seqActiveBeat(active.seq);
+    if (!beat) return null;
+    const chat = getCtx().chat || [];
+    const idx = nbeatTargetIndex(chat);
+    if (idx < 0) return null;
+    const m = chat[idx];
+    return { s, seq: active.seq, beat, idx, m, chatKey: fixChatKey(), msgKey: nbeatMsgKey(idx, m), beatSig: nbeatBeatSig(active.seq, beat) };
+}
+function nbeatStateKey(cur) {
+    return cur.chatKey + '#' + cur.msgKey + '#' + cur.beatSig;
+}
+function nbeatLoadSaved(cur) {
+    const md = getChatMetadataSafe();
+    const v = md ? md[NBEAT_META_KEY] : null;
+    if (!v || typeof v !== 'object' || v.msgKey !== cur.msgKey || v.beatSig !== cur.beatSig || !Array.isArray(v.options)) return null;
+    const opts = v.options
+        .filter((o) => o && typeof o.label === 'string' && typeof o.content === 'string' && o.label && o.content)
+        .slice(0, NBEAT_MAX_OPTIONS)
+        .map((o) => ({ label: o.label, content: o.content }));
+    return opts.length ? opts : null;
+}
+function nbeatSave(cur, options) {
+    const md = getChatMetadataSafe();
+    if (!md) return;
+    md[NBEAT_META_KEY] = { msgKey: cur.msgKey, beatSig: cur.beatSig, options: options.map((o) => ({ label: o.label, content: o.content })), at: Date.now() };
+    try {
+        const ctx = getCtx();
+        (ctx.saveMetadataDebounced || ctx.saveMetadata || (() => {}))();
+    } catch (e) { /* metadata still set in memory */ }
+}
+// 掐掉在途请求（生成函数醒来见 nbeatState 已换人 → 静默丢弃结果）。
+function nbeatAbortInFlight() {
+    const st = nbeatState;
+    if (st && st.ctl) { try { st.ctl.abort(); } catch (e) { /* ignore */ } }
+}
+function nbeatStop() {
+    if (nbeatState && nbeatState.status === 'busy') nbeatAbortInFlight();
+    nbeatState = null;
+    nbeatRefresh();
+}
+function nbeatRemoveChips() {
+    try { document.querySelectorAll('.so-nbeat-chip').forEach((c) => c.remove()); } catch (e) { /* ignore */ }
+}
+// 独立版插件还装着（它的 DOM 前缀是 so-next-beat- / so-nb-；我们用 so-nbeat-，互不相撞）。只看它【此刻】建出来的
+// 界面——设置键在卸载后仍会留在 settings.json 里，拿它判会误报。
+function nbeatStandaloneDetected() {
+    try {
+        return !!document.querySelector('#so-next-beat-settings, #so-next-beat-panel, #so-nb-float, #so-next-beat-wand-button, .so-next-beat-chip');
+    } catch (e) { return false; }
+}
+function nbeatRefreshHint() {
+    if (!ENABLE_NEXT_BEAT || !win) return;
+    const el = win.querySelector('#so-adv-nbeat-hint');
+    if (!el) return;
+    let t = '仅在「序列引导」进行中生效（单步方案 / 弧线下不出现）；生成用神谕自己的连接，每次一次 API 调用。';
+    if (nbeatStandaloneDetected()) t += ' ⚠ 检测到独立版「下一拍建议」插件也在运行——请在扩展管理里停用它，否则每条回复下会出现两份建议。';
+    if (el.textContent !== t) el.textContent = t;
+}
+
+// 唯一的对卡函数：闸 → 作废不属于眼前这一格的状态 / 在途请求 → 画（或拔掉）卡。任何事件都可以无脑调它。
+function nbeatRefresh() {
+    if (!ENABLE_NEXT_BEAT) return;
+    let cur = null;
+    try { cur = nbeatCurrent(); } catch (e) { cur = null; }
+    const key = cur ? nbeatStateKey(cur) : null;
+    if (nbeatState && nbeatState.key !== key) {
+        if (nbeatState.status === 'busy') nbeatAbortInFlight();
+        nbeatState = null;
+    }
+    nbeatRefreshHint();
+    if (!cur) { nbeatRemoveChips(); return; }
+    let view = nbeatState;
+    if (!view) {
+        const saved = nbeatLoadSaved(cur);
+        view = saved ? { key, status: 'done', options: saved } : { key, status: 'idle' };
+    }
+    nbeatRenderChip(cur, view);
+}
+function nbeatScheduleRefresh() {
+    if (!ENABLE_NEXT_BEAT) return;
+    if (nbeatRefreshTimer) clearTimeout(nbeatRefreshTimer);
+    nbeatRefreshTimer = setTimeout(() => { nbeatRefreshTimer = null; nbeatRefresh(); }, 30);
+}
+function nbeatOnGuidanceChanged() {
+    try { nbeatRefresh(); } catch (e) { console.warn('[Story Oracle] 下一拍建议刷新失败：', e); }
+}
+
+function nbeatErrorView(err, timedOut) {
+    if (timedOut) {
+        return { title: '等太久没有回应，已停止', detail: `超过 ${Math.round(POST_REPLY_CALL_TIMEOUT_MS / 1000)} 秒没收到回复——可点「重试」，或换一个更快的模型。` };
+    }
+    return { title: '生成失败', detail: explainProviderError(errChainMessage(err)).slice(0, 400) };
+}
+function nbeatFillInput(text) {
+    const ta = document.getElementById('send_textarea');
+    if (!ta) return false;
+    ta.value = nbeatAppendToInput(ta.value, text);
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    try { ta.focus(); } catch (e) { /* ignore */ }
+    return true;
+}
+function nbeatChipButton(label, cls, onClick) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'so-nbeat-btn' + (cls ? ' ' + cls : '');
+    b.textContent = label;
+    b.addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
+    return b;
+}
+// 卡的样子只由 (cur, view) 决定；签名相同就不碰 DOM（楼层事件一来就是好几发，重建会闪）。模型输出只经 textContent 上屏。
+function nbeatRenderChip(cur, view) {
+    const mes = document.querySelector('#chat .mes[mesid="' + cur.idx + '"]');
+    if (!mes) { nbeatRemoveChips(); return; }
+    const cutscene = nbeatIsCutscene(cur.beat);
+    const sig = nbeatHash(JSON.stringify([view.key, view.status, view.options || null, view.error || null, seqProgressLabel(cur.seq), cur.beat.goal, cutscene]));
+    const existing = document.querySelectorAll('.so-nbeat-chip');
+    if (existing.length === 1 && mes.contains(existing[0]) && existing[0].dataset.sig === sig) return;
+    nbeatRemoveChips();
+    const chip = document.createElement('div');
+    chip.className = 'so-nbeat-chip';
+    chip.dataset.state = view.status;
+    chip.dataset.sig = sig;
+    const head = document.createElement('div');
+    head.className = 'so-nbeat-head';
+    head.textContent = `🧭 下一拍建议 · ${seqProgressLabel(cur.seq)}` + (cutscene ? ' · 分镜 / 转场拍' : '');
+    chip.appendChild(head);
+    const goal = document.createElement('div');
+    goal.className = 'so-nbeat-goal';
+    goal.textContent = '目标：' + (cur.beat.goal || cur.beat.title || '');
+    chip.appendChild(goal);
+    const foot = document.createElement('div');
+    foot.className = 'so-nbeat-foot';
+    if (view.status === 'busy') {
+        const busy = document.createElement('span');
+        busy.className = 'so-nbeat-busy';
+        busy.textContent = '正在生成…';
+        foot.appendChild(busy);
+        foot.appendChild(nbeatChipButton('停止', 'so-nbeat-btn-minor', nbeatStop));
+    } else if (view.status === 'done') {
+        const list = document.createElement('div');
+        list.className = 'so-nbeat-list';
+        for (const o of (view.options || [])) {
+            const row = document.createElement('div');
+            row.className = 'so-nbeat-opt';
+            row.setAttribute('role', 'button');
+            row.tabIndex = 0;
+            row.title = '点一下：追加到输入框（不会发送）';
+            const tag = document.createElement('span');
+            tag.className = 'so-nbeat-tag ' + (o.label === NBEAT_LBL_USER ? 'so-nbeat-tag-user' : (o.label === NBEAT_LBL_TIME ? 'so-nbeat-tag-time' : 'so-nbeat-tag-role'));
+            tag.textContent = o.label;
+            const txt = document.createElement('span');
+            txt.className = 'so-nbeat-text';
+            txt.textContent = o.content;
+            row.appendChild(tag);
+            row.appendChild(txt);
+            const pick = (e) => { e.stopPropagation(); nbeatFillInput(nbeatFormatForInput(o)); };
+            row.addEventListener('click', pick);
+            row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(e); } });
+            list.appendChild(row);
+        }
+        chip.appendChild(list);
+        foot.appendChild(nbeatChipButton('重新生成', 'so-nbeat-btn-minor', () => { void nbeatGenerate(); }));
+        foot.appendChild(nbeatChipButton('填入整段', 'so-nbeat-btn-minor', () => {
+            nbeatFillInput((view.options || []).map(nbeatFormatForInput).join('\n'));
+        }));
+    } else if (view.status === 'error') {
+        const err = document.createElement('div');
+        err.className = 'so-nbeat-err';
+        const t = document.createElement('div');
+        t.className = 'so-nbeat-err-title';
+        t.textContent = '⚠ ' + ((view.error && view.error.title) || '生成失败');
+        err.appendChild(t);
+        if (view.error && view.error.detail) {
+            const d = document.createElement('div');
+            d.className = 'so-nbeat-err-detail';
+            d.textContent = view.error.detail;
+            err.appendChild(d);
+        }
+        chip.appendChild(err);
+        foot.appendChild(nbeatChipButton('重试', '', () => { void nbeatGenerate(); }));
+    } else {
+        foot.appendChild(nbeatChipButton('生成建议', '', () => { void nbeatGenerate(); }));
+    }
+    chip.appendChild(foot);
+    const anchor = mes.querySelector('.mes_text');
+    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(chip, anchor.nextSibling);
+    else mes.appendChild(chip);
+}
+
+// 世界书：跟随「世界书」范围设置（#so-wi）。关 = 不喂；「自定义」= 用户在本聊天勾选的条目原样（buildWorldInfo 'custom'）；
+// st / char / all = 用神谕同一套 dry-run 扫描（最新正文 + 幕后指示折进最近一格）取这次亮起的【绿灯】条目（char 档只收角色 /
+// 对话书）。[mvu_update] 规则条目先按条目剔、EJS 只在 opt-in 时经 renderWiEjs、最后 stripMvuRuleContents，与 buildWorldInfo 同序。
+async function nbeatBuildWorldInfo(s, scanText) {
+    if (wiEffectiveMode(s) === 'off') return '';
+    const mode = wiContextMode(s);
+    const opts = { renderEjs: ENABLE_WI_EJS_RENDER && !!s.wiRenderEjs };   // 下一拍建议 = READ 家族（同参谋），opt-in 时执行世界书 EJS
+    if (mode === 'custom') return nbeatCapBlock(await buildWorldInfo('custom', scanText, opts), NBEAT_WI_MAX_CHARS);
+    try {
+        const mod = await getWiEditApi();
+        if (!mod) return '';
+        const active = await getActiveScanUids(scanText);
+        const bookSet = (mode === 'char') ? new Set(await getCharChatBookNames()) : null;
+        const blocks = [];
+        for (const name of Object.keys(active)) {
+            if (bookSet && !bookSet.has(name)) continue;
+            let data; try { data = await mod.loadWorldInfo(name); } catch (e) { continue; }
+            const entries = nbeatPickGreenEntries(Object.values((data && data.entries) || {}), active[name]);
+            if (!entries.length) continue;
+            const rendered = await Promise.all(entries.map((e) => renderWiEjs(e.content.trim(), e, { renderEjs: opts.renderEjs, level: 'entry' })));
+            blocks.push(rendered.join('\n\n'));
+        }
+        return nbeatCapBlock(await stripMvuRuleContents(blocks.join('\n\n').trim()), NBEAT_WI_MAX_CHARS);
+    } catch (e) {
+        console.warn('[Story Oracle] 下一拍建议：世界书读取失败（本次不带世界书）：', e);
+        return '';
+    }
+}
+// 最新回复 → 提示词用正文：与参谋读主聊天同一口径（勾了「应用正则」就先过提示词正则），再剥机制块 / 思维链 / 状态行。
+function nbeatPromptReply(mes, s) {
+    let t = String(mes ?? '');
+    if (s && s.applyRegex && regexEngine && regexEngine.getRegexedString) {
+        try { t = regexEngine.getRegexedString(t, regexEngine.regex_placement.AI_OUTPUT, { isPrompt: true, depth: 0 }); } catch (e) { /* 用原文 */ }
+    }
+    return nbeatCleanReply(t);
+}
+// 组装一次请求：{ messages, known, cutscene, userChars }。known = 判角色标签用的材料全文（不含系统提示与选项写法——
+// 那两处的示例称呼不算「材料里出现过」）。
+async function nbeatBuildRequest(cur) {
+    const ctx = getCtx();
+    const s = cur.s;
+    const narrative = nbeatClip(nbeatPromptReply(cur.m.mes, s), nbeatClampChars(s.nextBeatMaxChars));
+    if (narrative.length < NBEAT_MIN_NARRATIVE) throw new Error('最新回复里没有足够的正文可接续。');
+    const directive = buildDirective(cur.beat);
+    const card = s.includeCard ? buildCardSection(ctx) : '';
+    const wi = await nbeatBuildWorldInfo(s, narrative + '\n' + directive);
+    const cutscene = nbeatIsCutscene(cur.beat);
+    const user = nbeatBuildUserPrompt({
+        card, wi, seqTitle: cur.seq.title, progress: seqProgressLabel(cur.seq), beat: cur.beat,
+        directive, narrative, cutscene, template: nbeatTemplateText(s),
+    });
+    const sub = (t) => { try { return ctx.substituteParams(t); } catch (e) { return t; } };
+    const userText = sub(user);
+    const messages = maybeWrapJb([{ role: 'system', content: NBEAT_SYSTEM_PROMPT }, { role: 'user', content: userText }], 'advisor', s);
+    const known = sub([card, wi, directive, narrative, ctx.name2 || ''].join('\n'));
+    return { messages, known, cutscene, userChars: userText.length };
+}
+
+// 生成（手动按钮 / 自动）。同一格在途时：自动直接让路；手动（重新生成 / 重试）掐掉旧的重来。
+async function nbeatGenerate(opts = {}) {
+    const cur = nbeatCurrent();
+    if (!cur) { nbeatRefresh(); return false; }
+    const key = nbeatStateKey(cur);
+    if (nbeatState && nbeatState.status === 'busy') {
+        if (opts.auto && nbeatState.key === key) return false;
+        nbeatAbortInFlight();
+    }
+    const ctl = new AbortController();
+    const st = { key, status: 'busy', ctl, timedOut: false };
+    nbeatState = st;
+    nbeatRefresh();
+    const timer = setTimeout(() => { st.timedOut = true; try { ctl.abort(); } catch (e) { /* ignore */ } }, POST_REPLY_CALL_TIMEOUT_MS);
+    let text = '';
+    let err = null;
+    let built = null;
+    try {
+        built = await nbeatBuildRequest(cur);
+        if (ctl.signal.aborted) throw new Error('aborted');
+        const r = await soCallModel(built.messages, { stream: false, maxTokens: nbeatMaxTokens(cur.s), signal: ctl.signal });
+        text = (typeof r === 'string') ? r : String((r && (r.text || r.content)) || '');
+    } catch (e) {
+        err = e;
+    } finally {
+        clearTimeout(timer);
+    }
+    if (nbeatState !== st) return false;                     // 已被停止 / 重来 / 换格——结果作废
+    st.ctl = null;
+    const now = nbeatCurrent();
+    if (!now || nbeatStateKey(now) !== key) { nbeatState = null; nbeatRefresh(); return false; }   // 回来时已不是这一格
+    if (ctl.signal.aborted && !st.timedOut) { nbeatState = null; nbeatRefresh(); return false; }
+    if (err) {
+        st.status = 'error';
+        st.error = nbeatErrorView(err, st.timedOut);
+        console.warn('[Story Oracle] 下一拍建议生成失败：', err);
+    } else {
+        const options = nbeatParseOptions(text, { known: built.known, cutscene: built.cutscene });
+        if (options.length) {
+            st.status = 'done';
+            st.options = options;
+            nbeatSave(cur, options);
+        } else {
+            st.status = 'error';
+            st.error = { title: '模型没有给出可用的候选', detail: '回复里没找到「我：」「角色名：」「时间：」这样的行——可点「重试」；若反复出现，看看「选项写法」是否要求了别的格式。' };
+            console.warn('[Story Oracle] 下一拍建议：回复无法解析：', text.slice(0, 500));
+        }
+    }
+    nbeatRefresh();
+    return st.status === 'done';
+}
+
+// 自动生成：MESSAGE_RECEIVED 上即发即忘。先等回复后编排（自动校正会换 swipe、自动诊断可能写回更新块）收尾，
+// 再按【那一刻】的最新一楼判：同一格只自动跑一次、已有结果 / 在途都不重复花钱。
+async function nbeatOnMessageReceived(id, type) {
+    if (!ENABLE_NEXT_BEAT) return;
+    const s = getSettings();
+    if (!s.nextBeatEnabled || !s.nextBeatAuto || type === 'first_message') return;
+    const t0 = Date.now();
+    await new Promise((r) => setTimeout(r, 0));
+    while (postReplyBusy && (Date.now() - t0) < NBEAT_AUTO_WAIT_MS) await new Promise((r) => setTimeout(r, 250));
+    const cur = nbeatCurrent();
+    if (!cur || !cur.s.nextBeatAuto || cur.idx !== Number(id)) return;
+    const key = nbeatStateKey(cur);
+    if (key === nbeatAutoKey) return;
+    if (nbeatState && nbeatState.key === key) return;
+    if (nbeatLoadSaved(cur)) return;
+    nbeatAutoKey = key;
+    await nbeatGenerate({ auto: true });
+}
+
+// 参谋条设置行：bind 由 bindControls 传入（同一个写设置 + save 的口）。
+function nbeatBindSettings(bind) {
+    bind('#so-adv-nbeat', 'nextBeatEnabled');
+    win.querySelector('#so-adv-nbeat').addEventListener('change', () => nbeatRefresh());
+    bind('#so-adv-nbeat-auto', 'nextBeatAuto');
+    const chars = win.querySelector('#so-adv-nbeat-chars');
+    chars.addEventListener('change', () => {
+        const v = nbeatClampChars(chars.value);
+        chars.value = String(v);
+        getSettings().nextBeatMaxChars = v;
+        save();
+    });
+    const tpl = win.querySelector('#so-adv-nbeat-tpl');
+    tpl.addEventListener('input', () => {
+        getSettings().nextBeatTemplate = (tpl.value === NBEAT_DEFAULT_TEMPLATE) ? null : tpl.value;
+        save();
+    });
+    win.querySelector('#so-adv-nbeat-tpl-reset').addEventListener('click', () => {
+        getSettings().nextBeatTemplate = null;
+        tpl.value = NBEAT_DEFAULT_TEMPLATE;
+        save();
+    });
+    win.querySelector('#so-adv-nbeat-tpl-clear').addEventListener('click', () => {
+        getSettings().nextBeatTemplate = '';
+        tpl.value = '';
+        save();
+    });
+}
+function nbeatLoadSettingsIntoForm(s) {
+    win.querySelector('#so-adv-nbeat').checked = !!s.nextBeatEnabled;
+    win.querySelector('#so-adv-nbeat-auto').checked = !!s.nextBeatAuto;
+    win.querySelector('#so-adv-nbeat-chars').value = String(nbeatClampChars(s.nextBeatMaxChars));
+    win.querySelector('#so-adv-nbeat-tpl').value = nbeatTemplateText(s);
+    nbeatRefreshHint();
 }
 
 // Chat switched (or first chat loaded): re-register from THIS chat's metadata —
@@ -13600,8 +15111,19 @@ async function applyFix(patchBlock, statusEl, expectStatKey, replyText) {
     // parseMessage 【之前】跑：mis-rooted 的 insert 一旦让 MVU 建出父链，等它跑完垃圾分支已经在存档里了；
     // 标签空白 / 毒元素那两类更是「跑完就整块没了」。逐 op 对账吃的也是修过的这一份 —— 两边共用同一个
     // 路径空间与同一份动词，绝不能一边看模型原文一边看修好的那份。
-    const patch = repairDiagPatch(patchBlock, diagStatOf(oldData));
+    let patch = repairDiagPatch(patchBlock, diagStatOf(oldData));
     if (patch.fixed) console.warn('[Story Oracle] 诊断补丁自动修正：', patch);
+    // 🩺 1.89.0 A（同 autoApplyFix）：全被拒 → 一个字不写、说清楚；部分被拒 → 只写能过的，成功文案末尾附原因。
+    const sf = diagSchemaFilterPatch(patch.text, oldData);
+    if (sf) {
+        if (!sf.dry.passOps.length) {
+            statusEl.textContent = '这份修复里的每一处都过不了这张卡的规则 —— 未写入。' + diagSchemaDryLines(sf.dry);
+            statusEl.classList.add('so-hint-error');
+            if (sf.dry.poisoned) maybeRunSaveHealth('failure');
+            return null;
+        }
+        if (sf.text !== patch.text) patch = Object.assign({}, patch, { text: sf.text });
+    }
     const swipePin = diagCaptureSwipe();          // M1 钉：解析【之前】把目标楼 + swipe 记下来
     const snapshot = JSON.parse(JSON.stringify(oldData));
     const newData = await Mvu.parseMessage(patch.text, oldData);
@@ -13626,7 +15148,9 @@ async function applyFix(patchBlock, statusEl, expectStatKey, replyText) {
         const zero = diagZeroChangeReport(patch.text, diagStatOf(snapshot), report, patch, (snapshot || {}).schema);
         statusEl.textContent = (zero.code === 'empty')
             ? '模型认为无需改动（补丁为空）—— 未写入。'
-            : diagZeroHeadline(zero.code) + ' —— 未写入。' + repairDiagNote(patch) + zero.text;
+            : diagZeroHeadline(zero.code) + ' —— 未写入。' + repairDiagNote(patch) + zero.text + (sf ? diagSchemaDryLines(sf.dry) : '');
+        // 🩺 1.89.0：zod 卡上一次有内容的修复一个值都没变 → 很可能是存档被污染，让存档检查说清是哪一格。
+        if (ENABLE_SCHEMA_DIAG && zero.code !== 'empty' && (snapshot || {}).schema === '没有用别管这个') maybeRunSaveHealth('failure');
         return null;
     }
     // swipe 钉（审计簇 M1）：解析等待期间换了楼 / 划了 swipe → 放弃，绝不把 A swipe 算的状态写进 B。
@@ -13637,7 +15161,7 @@ async function applyFix(patchBlock, statusEl, expectStatKey, replyText) {
     }
     await Mvu.replaceMvuData(newData, opts);
     refreshLatestMvuBar();   // 应用后刷新楼层状态栏（replaceMvuData 不发刷新事件，否则要手动重载——用户反馈）
-    return { snapshot, applied: JSON.parse(JSON.stringify(newData)), report, repair: patch };
+    return Object.assign({ snapshot, applied: JSON.parse(JSON.stringify(newData)), report, repair: patch }, sf ? { schemaDry: sf.dry } : {});
 }
 
 async function undoFix(snapshot) {
@@ -13751,6 +15275,15 @@ function postReplyPlan(flags, s) {
     // 条件是【本聊天有生效规则】，与两个自动开关无关——关了自动校正不该让修改器停摆。
     if (flags && flags.trainer && s && s.trainerActive) plan.push('trainer');
     return plan;
+}
+
+// 回复后编排的事件类型闸（1.89.0，单测在 postreply-first-message.test.mjs）：MESSAGE_RECEIVED 的第二参是生成类型。
+// 'first_message' 不是一条新回复——ST public/script.js getChatResult() 每次打开「只有开场白」的聊天（新建 + 重开）
+// 都会发 MESSAGE_RECEIVED(0, 'first_message')，角色编辑里重生成开场白也发一次。照跑的话，每开一次聊天就在开场白上
+// 跑一轮自动校正 / 自动诊断 / 修改器（修改器「每轮 +X」每开一次加一次；诊断每开一次花一次模型调用）。
+// 1.87.0 下一拍建议同理早已跳过它。其余类型（含缺省 / 旧式不带类型的 emit）一律照旧放行。
+function postReplyHandlesType(type) {
+    return type !== 'first_message';
 }
 
 // message_received 监听的落点：在共享锁下，对一条 AI 回复按 postReplyPlan 顺序跑校正 / 诊断。
@@ -14095,6 +15628,7 @@ async function runAutoDiagnose(ctx, s, targetId, chatKey, compatSession, retrySt
     // 不该先被这里晾最多 120 秒。
     await awaitMvuIdle(Mvu, { isCancelled: postReplyShouldStop });
     if (postReplyShouldStop()) return;
+    if (ENABLE_SCHEMA_DIAG) await maybeRunSaveHealth('first');   // 🩺 1.89.0：本聊天首次自动诊断 → 查一次存档（去重在里面）
 
     // 🩺 楼层播种（1.77.2，ENABLE_DIAG_FLOOR_SEED）：目标楼没有 MVU 数据（MVU「额外模型解析 + 不自动请求」对它什么都不做）
     // → 先替 MVU 把上一有效楼的状态种到这一楼、跑一遍它自己的指令、补占位符，下面读到的才是真状态，甲/乙/丙 闸与写回
@@ -14192,23 +15726,25 @@ async function runAutoDiagnose(ctx, s, targetId, chatKey, compatSession, retrySt
     };
 
     const effMaxTokens = Math.max(s.maxTokens, 4096);
-    const ctl = beginPostReplyCall(POST_REPLY_CALL_TIMEOUT_MS);      // 模块级中断器：240s 超时兜底 + 让「正在自动诊断…」提示可点一下中断
-    // 「正在分析…（点此中断）」——点一下即 cancelPostReply。重试跳（used>0）带标注，用户看得出是第几次。
-    const genToast = showAutoDiagGenerating(retryState && retryState.used > 0 ? retryState : null);
-    let finalText = '';
-    try {
-        if (s.mode === 'direct') {
-            const body = { model: s.model, messages, max_tokens: effMaxTokens };
-            if (s.sendTemperature) body.temperature = s.temperature;
-            finalText = await callDirect(resolveEndpointUrl(s), s.apiKey, body, ctl.signal);
-        } else {
+    // 一次模型往返（1.89.0 起抽成局部助手：schema 重写那一次要原样再走一遍同一条连接 / 中断 / 提示）。
+    const callOnce = async (msgs) => {
+        const ctl = beginPostReplyCall(POST_REPLY_CALL_TIMEOUT_MS);      // 模块级中断器：240s 超时兜底 + 让「正在自动诊断…」提示可点一下中断
+        // 「正在分析…（点此中断）」——点一下即 cancelPostReply。重试跳（used>0）带标注，用户看得出是第几次。
+        const genToast = showAutoDiagGenerating(retryState && retryState.used > 0 ? retryState : null);
+        try {
+            if (s.mode === 'direct') {
+                const body = { model: s.model, messages: msgs, max_tokens: effMaxTokens };
+                if (s.sendTemperature) body.temperature = s.temperature;
+                return await callDirect(resolveEndpointUrl(s), s.apiKey, body, ctl.signal);
+            }
             const override = s.sendTemperature ? { temperature: s.temperature } : {};
-            finalText = await callProfile(s.profileId, messages, effMaxTokens, override, ctl.signal);
+            return await callProfile(s.profileId, msgs, effMaxTokens, override, ctl.signal);
+        } finally {
+            ctl.end();
+            dismissToast(genToast);   // 无论成功 / 失败 / 抛错，都收掉「正在诊断」提示
         }
-    } finally {
-        ctl.end();
-        dismissToast(genToast);   // 无论成功 / 失败 / 抛错，都收掉「正在诊断」提示
-    }
+    };
+    let finalText = await callOnce(messages);
 
     // 事务闸（审计簇 A/T）：模型往返期间世界可能已变——切聊天 / 状态被谁写过 / 用户点了中断。
     // 写前一次性核验；不符 = 本轮作废，留一条说人话的记录，绝不写。
@@ -14227,12 +15763,30 @@ async function runAutoDiagnose(ctx, s, targetId, chatKey, compatSession, retrySt
         return;
     }
 
+    // 🩺 1.89.0 A 的一次重写（spec §4.3）：卡片规则拒绝了模型【自己写错】的指令 → 带着原因再问一次，只一次。
+    // 第二次往返后照样过同一道事务闸（中断 / 切聊天）；第二份回复摘不到区块 → 仍用第一份（交给下面照旧处理）。
+    let schemaRetried = null;
+    if (ENABLE_SCHEMA_DIAG) {
+        let md = null;
+        try { md = Mvu.getMvuData(mvuMsgOpts()); } catch (e) { md = null; }
+        const round = await diagSchemaRetryRound(finalText, md, s, messages, (msgs2) => {
+            lastPrompt = msgs2.map((m) => ({ role: m.role, content: m.content }));
+            return callOnce(msgs2);
+        }, postReplyShouldStop);
+        if (round.schemaRetried) {
+            if (postReplyShouldStop()) return;
+            if (fixChatKey() !== captured.chatKey) { toastDiagChatSwitched(); return; }   // 与另两道切聊天闸同一句（FIX 3）
+            finalText = round.finalText;
+            schemaRetried = round.schemaRetried;
+        }
+    }
+
     // 用户功能请求：每跑完一轮都留一条记录（含「无需改动」）。改动 → 带补丁 + 撤销按钮；其余按
     // 【真正发生的那件事】分类渲染（审计簇 C/E，见 autoDiagNoteContent 的状态表）。
     // 摘不到区块 = 我们没看懂模型说了什么 —— 旧代码在这里回 'nochange'，于是记录写着「已检查最新
     // 回复，本回合无需改动」= 对用户撒谎。改回 'unparsed'，并把「为什么没摘到」（diagParseFailReason，
     // 会点名缺了哪个闭合标签）连同回复原文一起带上，让用户自己看得见一眼。
-    const patchBlock = extractUpdateBlock(finalText);
+    let patchBlock = extractUpdateBlock(finalText);
     // 第 5 参 finalText（1.68.0）：双区块闸要数「MVU 会执行几块」，而 extractUpdateBlock 只摘【最早】
     // 那一个包装块 —— 模型甩了两个包装块时，第二块的指令会被静默丢掉（语料 2/768，其中一格两块的 op
     // 完全不同）。把回复原文一并交给它，那一档才拦得住。
@@ -14243,6 +15797,10 @@ async function runAutoDiagnose(ctx, s, targetId, chatKey, compatSession, retrySt
         ? await autoApplyFix(Mvu, patchBlock, captured.statKey, captured.chatKey, finalText,
             captured.statSnap != null ? { coWrite: { snap: captured.statSnap } } : undefined)
         : { status: 'unparsed', code: parseFail.code, detail: parseFail.detail, raw: finalText };
+    if (schemaRetried) result.schemaRetried = schemaRetried;
+    // 🩺 1.89.0（minors M8）：autoApplyFix 已拿原块写完；往后的记录正文 / 推导写回都用【实际写入】的那一块——zod 卡真筛掉了
+    // 指令时是已修复 + 已筛的块，否则原样（原生卡 / 无 schema 卡 → 逐字节同 1.88）。
+    if (ENABLE_SCHEMA_DIAG) patchBlock = diagShownPatch(result, patchBlock);
     // 确有改动 → 把结果反映到消息 / 状态栏（auto 诊断走 replaceMvuData，不发刷新事件，状态栏不会自己更新）：
     //   衍生（乙，原回复无块）：写回推导块 + saveChat + 重渲染（与官方 MVU 更新一致）；
     //   核验（甲，原回复已有块）：只重渲染刷新状态栏，不碰消息正文（避免出现两个更新块）。
@@ -14340,6 +15898,13 @@ async function autoApplyFix(Mvu, patchBlock, expectStatKey, expectChatKey, reply
     // 是另一个写入口，且才是每回合都跑的那个；只接手动那条等于漏掉大头。
     if (!patch) patch = repairDiagPatch(patchBlock, diagStatOf(oldData));
     if (patch.fixed) console.warn('[Story Oracle] 自动诊断补丁自动修正：', patch);
+    // 🩺 1.89.0 A：按卡片规则预演，只写能过的指令（spec §4.2）。拿不到规则 → sf=null，下面逐字节照旧。
+    const sf = diagSchemaFilterPatch(patch.text, oldData);
+    if (sf) {
+        if (!sf.dry.passOps.length) return done({ status: 'schemarefused', schemaDry: sf.dry, repair: patch });
+        if (sf.text !== patch.text) patch = Object.assign({}, patch, { text: sf.text });
+    }
+    const withDry = (r) => (sf ? Object.assign(r, { schemaDry: sf.dry }) : r);
     const swipePin = diagCaptureSwipe();          // M1 钉：解析【之前】取样
     const snapshot = JSON.parse(JSON.stringify(oldData));
     const newData = await Mvu.parseMessage(patch.text, oldData);
@@ -14347,6 +15912,8 @@ async function autoApplyFix(Mvu, patchBlock, expectStatKey, expectChatKey, reply
     // 诚实闸（审计簇 C）：基线用 snapshot（解析前深拷贝）、比对走 diagCmpKey（剔除派生数据），理由同 applyFix。
     const report = diagOpOutcomes(patch.text, (snapshot || {}).stat_data, newData.stat_data);
     if (diagCmpKey(newData) === diagCmpKey(snapshot)) {
+        // 🩺 1.89.0：zod 卡上一次有内容的修复一个值都没变 → 让存档检查看看是不是存档被污染（去重在里面）。
+        if (ENABLE_SCHEMA_DIAG && !emptyPatch && (snapshot || {}).schema === '没有用别管这个') maybeRunSaveHealth('failure');
         // 没有逐 op 对账依据（diagOpOutcomes 回 null）→ 旧路一律回笼统的 'nochange'。1.67.0 收窄它：
         // 对账件只认 <JSONPatch> 拼法，而 MVU 连 <json_patch> 拼法一起执行 —— 那种块上 report 恒为 null，
         // 于是「补丁明明一条都没落地」也会被报成「本回合无需改动」= 又一次撒谎。预检认得两种拼法，
@@ -14355,9 +15922,9 @@ async function autoApplyFix(Mvu, patchBlock, expectStatKey, expectChatKey, reply
         // 'nochange' —— 那两档的行为与 1.67.0 之前【逐字一致】（diag-applyfix 的 _.set 方言腿钉着）。
         if (!report) {
             const bare = diagZeroChangeReport(patch.text, diagStatOf(snapshot), null, patch, (snapshot || {}).schema);
-            return done((bare.code === 'nodata' || bare.code === 'empty')
+            return done(withDry((bare.code === 'nodata' || bare.code === 'empty')
                 ? { status: 'nochange', repair: patch }
-                : { status: 'ineffective', zero: bare, repair: patch });
+                : { status: 'ineffective', zero: bare, repair: patch }));
         }
         // 1.67.0：零变化语境的逐条诊断在这里【一次算好】随结果带走（本函数拿得到补丁与状态，侧聊记录
         // 那个纯函数拿不到）。zero.code === 'empty' 才是真·「模型说无需改动」——毒元素被剔光那档
@@ -14365,9 +15932,9 @@ async function autoApplyFix(Mvu, patchBlock, expectStatKey, expectChatKey, reply
         // 基线同 diagOpOutcomes：snapshot（解析前深拷贝），理由见 applyFix 同处注释。
         // schema 第 5 参同 applyFix（1.77.3）。
         const zero = diagZeroChangeReport(patch.text, diagStatOf(snapshot), report, patch, (snapshot || {}).schema);
-        return done((report.total === 0 && zero.code === 'empty')
+        return done(withDry((report.total === 0 && zero.code === 'empty')
             ? { status: 'verified', report, repair: patch }
-            : { status: 'ineffective', report, zero, repair: patch });
+            : { status: 'ineffective', report, zero, repair: patch }));
     }
     // swipe 钉（审计簇 M1）：绝不把 A swipe 算的状态写进 B。
     if (diagPinMoved(swipePin, diagCaptureSwipe())) return done({ status: 'stale' });
@@ -14375,7 +15942,7 @@ async function autoApplyFix(Mvu, patchBlock, expectStatKey, expectChatKey, reply
     // 撤销记录也不会挂错房。
     if (expectChatKey != null && fixChatKey() !== expectChatKey) return done({ status: 'stale', reason: 'chatSwitched' });
     await Mvu.replaceMvuData(newData, opts);
-    return done({ status: 'applied', snapshot, applied: JSON.parse(JSON.stringify(newData)), report, repair: patch });
+    return done(withDry({ status: 'applied', snapshot, applied: JSON.parse(JSON.stringify(newData)), report, repair: patch }));
 }
 
 // 重渲染该 AI 消息，让前端状态栏反映这次自动诊断的写入。auto 诊断经 Mvu.replaceMvuData 写库，而它【不发】
@@ -14800,7 +16367,12 @@ function applyMvuedEdits(statData, edits) {
         }
         const last = path[path.length - 1];
         if (!ok || !own(parent, last)) { skipped.push(label); continue; }
-        if (e.vwd) {
+        if (e.remove) {
+            // 🗑 删除（1.88.0）：只在【对象】父上删键。数组父跳过 —— delete 会留空洞、下标也会整体漂；
+            // 列表项另有 ➖（整列表替换），UI 也从不对数组元素发 remove。
+            if (Array.isArray(parent)) { skipped.push(label); continue; }
+            delete parent[last];
+        } else if (e.vwd) {
             const cur = parent[last];
             if (!mvuIsVwdPair(cur)) { skipped.push(label); continue; }
             cur[0] = clone(e.value);
@@ -14962,6 +16534,7 @@ let mvuedDirty = new Map();
 let mvuedOpenData = null;      // 打开时的 MvuData 拷贝（仅供展示；应用时重读 fresh）
 let mvuedSchemaCache = null;   // 本聊天的扫描 schema（打开时从 metadata 读）
 let mvuedActiveTab = 0;        // 当前页签下标（开窗归零）
+let mvuedKindOverrides = null; // 🩺 1.89.0：从存档检查跳来时，把那一格按卡片要求的类型渲染（{pathStr: kind}；开卡时定、关卡清空）
 // 「应用」在途标志（防连点写两次）。updateMvuedFoot 是「应用」键 disabled 的唯一写入口，故它也读这里——
 // 否则用户在写入过程中随手改个值，updateMvuedFoot 会把刚禁用的按钮又点亮。
 let mvuedApplying = false;
@@ -14993,6 +16566,30 @@ let trainerLastRun = null;
 let trainerRulesForRender = [];
 
 function collectMvuedEdits() { return Array.from(mvuedDirty.values()); }
+
+// 🗑 待删标记的开关（1.88.0；对传入的脏表就地操作，可单测）。返回 true = 已标记待删，false = 已取消。
+// 标记 = 同路径的一条 {path, remove:true}，【不】立即写 MVU —— 与值编辑一样等「应用」、计入「已改 N 项」、
+// 「还原」一并清掉；应用后的撤销走侧聊记录（整份快照换回）。标记时把两样东西暂存进标记条目、取消时原样还回：
+//   · 同路径原有的值编辑（prev）；· 子孙路径上的编辑（dropped）—— 待删子树不再渲染，留着它们只会在应用时
+//     落成「跳过 N 项（字段已不存在）」的假警报。误点一下 🗑 再点 ↩，用户手上的活一个都不丢。
+// 标记条目带着暂存物直接交给 applyMvuedEdits 无妨：写入只认 path / remove。
+function mvuedToggleRemove(dirty, path) {
+    const key = mvuedPathStr(path);
+    const cur = dirty.get(key);
+    if (cur && cur.remove) {
+        dirty.delete(key);
+        if (cur.prev) dirty.set(key, cur.prev);
+        for (const [k, e] of (cur.dropped || [])) dirty.set(k, e);
+        return false;
+    }
+    const under = (p) => Array.isArray(p) && p.length > path.length && path.every((seg, i) => p[i] === seg);
+    const dropped = [];
+    for (const [k, e] of Array.from(dirty.entries())) {
+        if (k !== key && e && under(e.path)) { dropped.push([k, e]); dirty.delete(k); }
+    }
+    dirty.set(key, { path: path.slice(), remove: true, prev: cur || null, dropped });
+    return true;
+}
 
 function mvuedReadSchemaCache() {
     try {
@@ -15205,7 +16802,7 @@ function mvuedMarkTyped(leaf, raw) {
     return true;
 }
 
-async function openMvuEditor() {
+async function openMvuEditor(opts) {
     if (!ENABLE_MVU_EDITOR || !win) return;
     const Mvu = await getMvu();
     if (!Mvu || typeof Mvu.getMvuData !== 'function') {
@@ -15219,6 +16816,8 @@ async function openMvuEditor() {
     mvuedActiveTab = 0;
     mvuedOpenChatKey = fixChatKey();   // 「跟随现实」刷新的身份钉（见 mvuedMaybeRefresh 的守卫②）
     mvuedSchemaCache = mvuedReadSchemaCache();
+    mvuedKindOverrides = (ENABLE_SCHEMA_DIAG && opts && Array.isArray(opts.focusPath) && opts.focusKind)
+        ? { [mvuedPathStr(opts.focusPath)]: opts.focusKind } : null;
 
     // getMvu 是 async（可能等 TavernHelper 初始化）→ 连点两下按钮会走进两次 append。
     // 建卡前先把旧卡摘掉：永远只有一张 #so-mvued-card。
@@ -15265,6 +16864,25 @@ async function openMvuEditor() {
     renderMvuedBody();
     updateMvuedScanBtn();   // 本聊天已扫过 → 开卡就显示「重新扫描」（mvuedSchemaCache 上面刚从 metadata 读过）
     overlay.querySelector('#so-mvued-search').addEventListener('input', renderMvuedBody);
+    // 🩺 1.89.0：存档检查的「在变量编辑器里打开这一格」——跳到那一页、滚到那一行、闪 2 秒（不替玩家改值）。
+    // 找不到那一格就退到最近的祖先；全都找不到就停在首页，编辑照常。
+    const focus = opts && Array.isArray(opts.focusPath) ? opts.focusPath : null;
+    if (ENABLE_SCHEMA_DIAG && focus) {
+        try {
+            const stat = mvuedOpenData && (mvuedOpenData.stat_data || mvuedOpenData);
+            const idx = mvuedTabIndexForPath(buildMvuedModel(stat, mvuedSchemaCache, mvuedReadListOverrides()), focus);
+            if (idx >= 0) { mvuedActiveTab = idx; renderMvuedBody(); }
+            for (let n = focus.length; n > 0; n--) {
+                const want = mvuedPathStr(focus.slice(0, n));
+                const el = [...overlay.querySelectorAll('[data-path]')].find((x) => x.dataset.path === want);
+                if (!el) continue;
+                el.scrollIntoView({ block: 'center' });
+                el.classList.add('so-mvued-flash');
+                setTimeout(() => el.classList.remove('so-mvued-flash'), 2000);
+                break;
+            }
+        } catch (e) { /* 跳不过去就停在首页，不影响编辑 */ }
+    }
 }
 
 // 关卡即弃全部会话内状态（脏表 / 快照 / schema 缓存都是【某一次打开】的东西，schema 更是 per-chat）。
@@ -15272,6 +16890,7 @@ async function openMvuEditor() {
 function closeMvuEditor() {
     const el = document.getElementById('so-mvued-card');
     if (el) el.remove();
+    mvuedKindOverrides = null;
     mvuedDirty = new Map();
     mvuedOpenData = null;
     mvuedSchemaCache = null;
@@ -15641,6 +17260,9 @@ async function mvuedApply() {
                 const frozen = trainerReadRules().filter(r => r.kind === 'freeze');
                 const rearmed = [];
                 for (const e of edits) {
+                    // 🗑 删除没有「新值」可武装：冻结规则原样保留，🎛 页会把它显示成「字段已不存在」（同一贯口径：
+                    // 不替用户删规则）。不跳过的话 freeze 目标会被写成 undefined。
+                    if (e.remove) continue;
                     const k = mvuedPathStr(e.path);
                     const rule = frozen.find(r => mvuedPathStr(r.path) === k);
                     if (rule) {
@@ -15680,6 +17302,7 @@ async function mvuedApply() {
             // 撤销之后的下一回合把用户刚撤销掉的编辑悄悄拉回来。
             appendNoteToRoom('diagnose', entry, { mvued: { snapshot, applied: JSON.parse(JSON.stringify(w.applied)), trainerFreeze: trainerFreezeUndo } });
             say(withNotice(head + undoClause));
+            if (ENABLE_SCHEMA_DIAG) maybeRunSaveHealth('recheck');   // 🩺 1.89.0：改完再查一次，修好了就说「已恢复正常」
         } catch (e) {
             console.error('[Story Oracle] 🎛 变量编辑器：变量已写入，但侧聊记录没能留下。', e);
             // 落点提示这一路也要带上：记录没落下与「状态栏会晚一拍」是两件互不相干的事，
@@ -15898,6 +17521,19 @@ function mvuedTabHits(nodes, q) {
     return n;
 }
 
+// 纯函数（1.89.0）：路径（或它的祖先）落在哪一页。给存档检查的「在变量编辑器里打开这一格」跳页用。
+function mvuedTabIndexForPath(model, segs) {
+    const want = (Array.isArray(segs) ? segs : []).map(String);
+    const hits = (nd) => {
+        const p = (nd.path || []).map(String);
+        if (p.length <= want.length && p.every((x, i) => x === want[i])) return true;
+        return (nd.children || []).some(hits);
+    };
+    const tabs = (model && model.tabs) || [];
+    for (let i = 0; i < tabs.length; i++) if ((tabs[i].nodes || []).some(hits)) return i;
+    return -1;
+}
+
 function renderMvuedBody() {
     const card = document.getElementById('so-mvued-card');
     if (!card) return;
@@ -16059,17 +17695,53 @@ function mvuedMarkDirty(leaf, value) {
     updateMvuedFoot();
 }
 
+// 🗑 删除（1.88.0，Prince 2026-09-27 裁：页签【内】的任何字段 / 文件夹 / 列表可删，页签本身不可删）。
+// 页签本身 = 根级对象 / 数组（buildMvuedModel 把根级对象摊成页签、根级数组成页内唯一的 list 节点）；
+// 根级散字段（基础页的标量 / VWD 对）是叶子、可删。列表【项】不走这里 —— 它们有 ➖（整列表替换）。
+function mvuedCanRemove(nd) {
+    return !!nd && Array.isArray(nd.path) && (nd.path.length > 1 || nd.type === 'leaf');
+}
+function mvuedMarkedRemove(nd) {
+    const d = mvuedDirty.get(mvuedPathStr(nd.path));
+    return !!(d && d.remove);
+}
+// 🗑 / ↩ 钮。挂进 <summary> 时必须吃掉默认动作，否则点一下还顺带折叠 / 展开整组。
+function mvuedRemoveBtn(nd) {
+    const marked = mvuedMarkedRemove(nd);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'so-lb-mini so-mvued-rm';
+    b.textContent = marked ? '↩' : '🗑';
+    b.title = marked ? '取消删除' : '删除（点「应用」后生效，可撤销）';
+    b.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        mvuedToggleRemove(mvuedDirty, nd.path);
+        renderMvuedBody();
+    });
+    return b;
+}
+
 function renderMvuedNode(nd, q) {
     if (nd.type === 'group') {
         const selfHit = mvuedSelfHit(nd, q);
         const inner = selfHit ? '' : q;   // 组名自身命中 → 子树整体放行（不再逐叶过滤）
         const det = document.createElement('details');
         det.className = 'so-mvued-group';
+        if (ENABLE_SCHEMA_DIAG) det.dataset.path = mvuedPathStr(nd.path);   // 🩺 1.89.0：跳到这一格的锚（旗关不加属性）
         det.open = true;
         if (q && !selfHit && !mvuedCountHits(nd, q)) det.classList.add('so-mvued-miss');
         const sum = document.createElement('summary');
-        sum.textContent = nd.label;
+        const lab = document.createElement('span');
+        lab.className = 'so-mvued-grouplabel';
+        lab.textContent = nd.label;
+        sum.appendChild(lab);
         det.appendChild(sum);
+        if (mvuedCanRemove(nd)) {
+            sum.appendChild(mvuedRemoveBtn(nd));
+            // 待删：只留标题（划线 + ↩），子树不渲染 —— 子孙编辑已被 mvuedToggleRemove 暂存，没东西可改。
+            if (mvuedMarkedRemove(nd)) { det.classList.add('so-mvued-removed', 'so-mvued-dirty'); return det; }
+        }
         for (const c of nd.children) det.appendChild(renderMvuedNode(c, inner));
         return det;
     }
@@ -16078,8 +17750,10 @@ function renderMvuedNode(nd, q) {
 }
 
 function renderMvuedLeaf(nd, q) {
+    nd = mvuedEffectiveLeaf(nd, mvuedKindOverrides);   // 🩺 1.89.0：无覆盖 → 原对象，逐字节同旧
     const row = document.createElement('div');
     row.className = 'so-mvued-leaf';
+    if (ENABLE_SCHEMA_DIAG) row.dataset.path = mvuedPathStr(nd.path);   // 🩺 1.89.0：跳到这一格的锚（旗关不加属性）
     if (q && !mvuedSelfHit(nd, q)) row.classList.add('so-mvued-miss');
     const dirty = mvuedDirty.get(mvuedPathStr(nd.path));
     const cur = dirty ? dirty.value : nd.value;
@@ -16088,6 +17762,12 @@ function renderMvuedLeaf(nd, q) {
     lab.className = 'so-mvued-label';
     lab.textContent = nd.label;
     row.appendChild(lab);
+    // 🗑 待删：只剩划线的字段名 + ↩（没有输入框 / 🔒 —— 这一格应用后就不存在了，改它、冻结它都没意义）。
+    if (mvuedCanRemove(nd) && mvuedMarkedRemove(nd)) {
+        row.classList.add('so-mvued-removed');
+        row.appendChild(mvuedRemoveBtn(nd));
+        return row;
+    }
 
     const redirty = () => { row.classList.add('so-mvued-dirty'); };
     if (nd.options && nd.kind !== 'boolean' && nd.kind !== 'readonly') {
@@ -16215,6 +17895,7 @@ function renderMvuedLeaf(nd, q) {
             row.appendChild(tag);
         }
     }
+    if (mvuedCanRemove(nd)) row.appendChild(mvuedRemoveBtn(nd));
     return row;
 }
 
@@ -16345,6 +18026,7 @@ function mvuedBlankLike(last) {
 function renderMvuedList(nd, q) {
     const box = document.createElement('div');
     box.className = 'so-mvued-list';
+    if (ENABLE_SCHEMA_DIAG) box.dataset.path = mvuedPathStr(nd.path);   // 🩺 1.89.0：跳到这一格的锚（旗关不加属性）
     if (q && !mvuedSelfHit(nd, q)) box.classList.add('so-mvued-miss');
     const listKey = mvuedPathStr(nd.path);
     if (mvuedDirty.has(listKey)) box.classList.add('so-mvued-dirty');
@@ -16353,7 +18035,8 @@ function renderMvuedList(nd, q) {
     head.textContent = nd.label;
     // 「⇄ 当作数值+描述」：≡ 的反向出口，只对【被翻正过来的】节点出（forcedList；真列表没有可回退的
     // VWD 形态）。挂在标题里而不是 box 上：box 的直接子 <button> 是「＋ 添加一项」的定位口径。
-    if (nd.forcedList) {
+    // 待删时不给 ⇄：mvuedSetListOverride 会删掉该路径的脏项，待删标记（连同它暂存的编辑）就被悄悄丢了。
+    if (nd.forcedList && !mvuedMarkedRemove(nd)) {
         const back = document.createElement('button');
         back.type = 'button';
         back.className = 'so-lb-mini';
@@ -16363,6 +18046,11 @@ function renderMvuedList(nd, q) {
         head.appendChild(back);
     }
     box.appendChild(head);
+    if (mvuedCanRemove(nd)) {
+        head.appendChild(mvuedRemoveBtn(nd));
+        // 待删：只留标题（划线 + ↩）。必须在 mvuedListValue 之前返回 —— 待删标记没有 value，读它会炸。
+        if (mvuedMarkedRemove(nd)) { box.classList.add('so-mvued-removed'); return box; }
+    }
     const val = mvuedListValue(nd);
     val.forEach((item, i) => {
         const row = document.createElement('div');
@@ -17034,6 +18722,538 @@ function diagDeltaTargetOk(cur) {
     return false;
 }
 
+/* ── 🩺 1.89.0：schema 感知诊断（spec 2026-09-27-schema-aware-diagnosis-design.md）────────────────
+ * mvu_zod 卡把自己的 zod 规则交给酒馆助手 registerVariableSchema(z.object({stat_data}), {type:'message'})，
+ * 酒馆助手 4.9.5 只存进内部 pinia store、没有公开 getter。2026-09-27 spike 实证可读的唯一路径见下；
+ * 另一条（包装 registerVariableSchema）读不到：卡脚本 iframe 建立时就把 TavernHelper 成员拷走、跨 /newchat 不重建。
+ * 【红线】这是酒馆助手的内部结构、随时会变：任何一环缺失 / 抛错 → null，调用方行为与 1.88.0 逐字节相同。 */
+let soZodReadWarned = false;
+function soReadZodSchema(mvuData) {
+    const miss = () => {
+        if (!soZodReadWarned) {
+            soZodReadWarned = true;
+            console.warn('[Story Oracle] 🩺 这张卡挂了 mvu_zod，但没能从酒馆助手读到它的变量规则（酒馆助手版本变化？）——诊断按原样工作，不做 schema 预检。');
+        }
+        return null;
+    };
+    try {
+        if (!mvuData) return null;
+        // mvu_zod 的指纹：每轮更新结束把 MvuData.schema 设成这个字符串（mvu-facts ⑨）。开局楼还没有指纹（schema 仍是 MVU
+        // 原生对象），但卡已经注册了 zod 规则——有注册就用注册的（store 随换角色清空，不会是上一张卡的）。
+        const fingerprint = mvuData.schema === '没有用别管这个';
+        const soft = () => (fingerprint ? miss() : null);   // 没指纹也没注册 = 普通 / 原生卡 → 静默 null，不 warn
+        const host = document.getElementById('tavern_helper');
+        const app = host && host.__vue_app__;
+        const gp = app && app.config && app.config.globalProperties;
+        const pinia = gp && gp.$pinia;
+        const store = (pinia && pinia._s && typeof pinia._s.get === 'function') ? pinia._s.get('variable_schemas') : null;
+        let sc = store ? store.message : null;
+        if (sc && sc.__v_raw) sc = sc.__v_raw;   // Vue reactive 代理：zod 内部会撞代理不变量而抛，必须取原对象
+        if (!sc || typeof sc.safeParse !== 'function') return soft();
+        const probe = sc.safeParse({ stat_data: diagStatOf(mvuData) });
+        // 根部就失败 = 形状对不上（别的脚本注册了别的东西）；深处失败 = 存档被污染（B 要的正是这种）→ 仍可用。
+        if (probe && probe.success === false) {
+            const issues = (probe.error && Array.isArray(probe.error.issues)) ? probe.error.issues : [];
+            if (issues.some((i) => !Array.isArray(i.path) || i.path.length <= 1)) return soft();
+        }
+        return sc;
+    } catch (e) {
+        return (mvuData && mvuData.schema === '没有用别管这个') ? miss() : null;
+    }
+}
+
+// 纯函数：按 MVU 命令语义（JSONPatch → set / add / insert / delete，mvu_zod 收到的就是这几种）把一条 op 落到状态副本上。
+// 回 { ok, stat }；ok=false = 这条命令在执行器那里就落不了地（delta 打在非数字上 / 父容器不存在等）。不改入参。
+// emptyAs = 'arr'：父容器不存在时把【最后一层】建成 [] 而不是 {}（mvu_zod 的 insert：先试 {}、不过再试 []）。
+function diagSchemaApplyOp(stat, op, emptyAs) {
+    let s;
+    try { s = JSON.parse(JSON.stringify(stat == null ? {} : stat)); } catch (e) { return { ok: false, stat }; }
+    const segs = diagPathSegs(op && op.path, true);
+    const parentOf = (root, sg, lastArr) => {
+        let node = root;
+        for (let i = 0; i < sg.length; i++) {
+            const k = sg[i];
+            if (node == null || typeof node !== 'object') return null;
+            if (!Object.prototype.hasOwnProperty.call(node, k)) node[k] = (lastArr && i === sg.length - 1) ? [] : {};   // lodash _.set 语义：沿途建对象
+            node = node[k];
+        }
+        return (node && typeof node === 'object') ? node : null;
+    };
+    const key = segs.length ? segs[segs.length - 1] : '';
+    const verb = op && op.op;
+    const copyVal = (v) => JSON.parse(JSON.stringify(v === undefined ? null : v));
+    if (verb === 'replace') {
+        if (!segs.length) return { ok: true, stat: copyVal(op.value) };
+        const parent = parentOf(s, segs.slice(0, -1));
+        if (!parent) return { ok: false, stat: s };
+        const cur = parent[key];
+        parent[key] = (mvuIsVwdPair(cur) && !mvuIsVwdPair(op.value)) ? [copyVal(op.value), cur[1]] : copyVal(op.value);
+        return { ok: true, stat: s };
+    }
+    if (verb === 'delta') {
+        const cur = diagWalkSegs(s, segs);
+        if (!cur.ok || !segs.length) return { ok: false, stat: s };
+        const v = mvuIsVwdPair(cur.value) ? cur.value[0] : cur.value;
+        if (typeof v !== 'number' || typeof op.value !== 'number') return { ok: false, stat: s };
+        const parent = diagWalkSegs(s, segs.slice(0, -1)).value;
+        if (mvuIsVwdPair(cur.value)) parent[key][0] = v + op.value; else parent[key] = v + op.value;
+        return { ok: true, stat: s };
+    }
+    if (verb === 'insert' || verb === 'add') {
+        const pw = diagWalkSegs(s, segs.slice(0, -1));
+        const parent = (pw.ok && pw.value && typeof pw.value === 'object') ? pw.value : parentOf(s, segs.slice(0, -1), emptyAs === 'arr');
+        if (!parent) return { ok: false, stat: s };
+        const val = copyVal(op.value);
+        if (Array.isArray(parent)) {
+            if (key === '-' || key === '') parent.push(val);
+            else if (/^\d+$/.test(key)) parent.splice(Number(key), 0, val);
+            else return { ok: false, stat: s };
+        } else parent[key] = val;
+        return { ok: true, stat: s };
+    }
+    if (verb === 'remove') {
+        const pw = diagWalkSegs(s, segs.slice(0, -1));
+        if (!segs.length || !pw.ok || !pw.value || typeof pw.value !== 'object') return { ok: false, stat: s };
+        if (Array.isArray(pw.value) && /^\d+$/.test(key)) pw.value.splice(Number(key), 1);
+        else delete pw.value[key];
+        return { ok: true, stat: s };
+    }
+    return { ok: false, stat: s };
+}
+
+// 纯函数：在写入【之前】预演这块补丁会被这张卡怎么处理（spec §4.1）。
+//   zod 卡：逐条复刻 mvu_zod —— 落到当前状态副本 → 整棵 safeParse → 过了就用【解析后的输出】推进状态（它就是这么做的）。
+//     判定：没过 = zod-rejected（问题落在别处 = blockedByOther，即存档本身不合规）；过了但目标路径没了 = zod-stripped
+//     （嵌套固定对象里的新键被悄悄剥掉）；过了但值变了 = zod-altered（transform / 强转，带 detail.to）。
+//     mvu_zod 在路径段以 '_' 开头时直接不执行（schema-blocked）；add 打在非数字上报错不执行（delta-target-not-number）。
+//   原生 schema 卡：直接复用 diagPreflightOp 的三条 schema 判定，提前说出来（不另写逻辑）。
+// safeParse 抛错 → 'unknown'，这条放行（fail-open）；单次超过 200ms → 余下一律 'unknown'（spec §9）。
+// 空补丁 / 没有可判依据 → null（调用方照旧走）。不改入参。
+const DIAG_SCHEMA_REFUSALS = ['zod-rejected', 'zod-stripped', 'not-extensible', 'delta-target-not-number', 'schema-blocked'];
+function diagSchemaDryRun(ops, stat, { zod, nativeSchema } = {}) {
+    if (!Array.isArray(ops) || !ops.length) return null;
+    const zodOn = !!(zod && typeof zod.safeParse === 'function');
+    const nativeOn = !zodOn && !!(nativeSchema && typeof nativeSchema === 'object' && !Array.isArray(nativeSchema));
+    if (!zodOn && !nativeOn) return null;
+    const strip = (p) => (Array.isArray(p) ? (p[0] === 'stat_data' ? p.slice(1) : p.slice()) : []);
+    const pick = (i) => ({ code: i.code, path: strip(i.path), expected: i.expected, values: i.values,
+        minimum: i.minimum, maximum: i.maximum, inclusive: i.inclusive, origin: i.origin, errors: i.errors, keys: i.keys, message: i.message });
+    const overlaps = (a, b) => { const n = Math.min(a.length, b.length); for (let k = 0; k < n; k++) if (String(a[k]) !== String(b[k])) return false; return true; };
+    // 与键顺序无关的比较（zod 按 shape 重排键不算「改写」——minors M1）。
+    const canon = (v) => (Array.isArray(v) ? v.map(canon) : (v && typeof v === 'object')
+        ? Object.keys(v).sort().reduce((o, k) => { o[k] = canon(v[k]); return o; }, {}) : v);
+    const same = (x, y) => { try { return JSON.stringify(canon(x)) === JSON.stringify(canon(y)); } catch (e) { return false; } };
+    let state;
+    try { state = JSON.parse(JSON.stringify(stat == null ? {} : stat)); } catch (e) { return null; }
+    let poisoned = false;
+    let baseIssues = [];   // 写之前存档里【本来就有】的问题：op 撞上它们不算 op 自己的错（minors M2/M3）
+    if (zodOn) {
+        try {
+            const r0 = zod.safeParse({ stat_data: state });
+            poisoned = r0.success === false;
+            if (poisoned) baseIssues = ((r0.error && r0.error.issues) || []).map(pick);
+        } catch (e) { poisoned = false; }
+    }
+    const issueKey = (i) => i.code + '\u0000' + JSON.stringify((i.path || []).map(String));
+    const baseKeys = new Set(baseIssues.map(issueKey));
+    let slow = false;
+    const items = ops.map((op, index) => {
+        const path = (op && typeof op.path === 'string') ? op.path : '';
+        const segs = diagPathSegs(path, true);
+        const it = { index, op: op && op.op, path, segs, verdict: 'ok', detail: null };
+        if (slow) { it.verdict = 'unknown'; return it; }
+        if (!zodOn) {
+            // 原生 MVU：只认它自己的两条 schema 判定（'_' 段 = schema-blocked 是 mvu_zod 的规矩，不属于原生卡——review 1b）。
+            // 判过的 op 照 MVU 落到副本上，后面的 op 才对着「前面那些写完之后」的状态判（review 1d）。
+            const v = diagPreflightOp(op, state, nativeSchema).verdict;
+            if (v === 'not-extensible' || v === 'delta-target-not-number') { it.verdict = v; return it; }
+            const applied = diagSchemaApplyOp(state, op);
+            if (applied.ok) state = applied.stat;
+            return it;
+        }
+        // mvu_zod 的 '_' 闸：set / add(delta) / delete 看整条路径，insert 只看【容器】路径（源码 insert 分支 p(s)、s = args[0]）
+        // ——新键本身以 _ 开头照样写得进（review 1a）。
+        const underSegs = (op && (op.op === 'insert' || op.op === 'add')) ? segs.slice(0, -1) : segs;
+        if (underSegs.some((sg) => String(sg).startsWith('_'))) { it.verdict = 'schema-blocked'; return it; }
+        if (op && op.op === 'delta') {
+            const cur = diagWalkSegs(state, segs);
+            const v = cur.ok ? (mvuIsVwdPair(cur.value) ? cur.value[0] : cur.value) : undefined;
+            if (typeof v !== 'number') { it.verdict = 'delta-target-not-number'; return it; }
+        }
+        let applied = diagSchemaApplyOp(state, op);
+        if (!applied.ok) return it;   // 执行器层落不了地：不归 schema 管，交给既有预检 / 报告照旧说
+        let res;
+        const t0 = Date.now();
+        try { res = zod.safeParse({ stat_data: applied.stat }); } catch (e) { it.verdict = 'unknown'; return it; }
+        if (Date.now() - t0 > 200) slow = true;
+        // mvu_zod 的 insert 碰上不存在的父容器：先按 {} 建、过不了再按 [] 建（它的 d || c(g.set(s,[])) 那一步）——照抄，免得误判拒绝。
+        if (res && res.success === false && (op.op === 'insert' || op.op === 'add') && !diagWalkSegs(state, segs.slice(0, -1)).ok) {
+            const alt = diagSchemaApplyOp(state, op, 'arr');
+            if (alt.ok) {
+                let res2 = null;
+                try { res2 = zod.safeParse({ stat_data: alt.stat }); } catch (e) { res2 = null; }
+                if (res2 && res2.success) { applied = alt; res = res2; }
+            }
+        }
+        if (!res || res.success === false) {
+            const issues = ((res && res.error && res.error.issues) || []).map(pick);
+            const mine = issues.filter((i) => !baseKeys.has(issueKey(i)));
+            it.verdict = 'zod-rejected';
+            it.detail = { issues: mine.length ? mine : issues, blockedByOther: mine.length === 0, baseline: baseIssues.length ? baseIssues[0].path : null };
+            return it;
+        }
+        const out = (res.data && res.data.stat_data !== undefined) ? res.data.stat_data : applied.stat;
+        if (op.op !== 'remove') {
+            const got = diagWalkSegs(out, segs);
+            const wrote = diagWalkSegs(applied.stat, segs);
+            // 往列表里 insert：下标越界时 splice 直接追加（mvu_zod 同样），值不在「写的那个下标」上不代表被剥掉（review 1c）。
+            const parentArr = Array.isArray(diagWalkSegs(applied.stat, segs.slice(0, -1)).value);
+            const isAppend = (op.op === 'insert' || op.op === 'add') && (segs[segs.length - 1] === '-' || parentArr);
+            if (!isAppend && !got.ok) it.verdict = 'zod-stripped';
+            else if (!isAppend && wrote.ok && !same(got.value, wrote.value)) { it.verdict = 'zod-altered'; it.detail = { to: got.value }; }
+        }
+        try { state = JSON.parse(JSON.stringify(out)); } catch (e) { /* 保持旧状态 */ }
+        return it;
+    });
+    // 原生卡：判定只用来【说明】与重写，绝不过滤（review 1e：这条路没有真卡证据；真不合规的 op MVU 自己会跳过，
+    // 照写 = 1.88 行为，最坏也不比 1.88 差）。zod 卡才真正只写能过的。
+    const passOps = nativeOn ? ops.slice() : ops.filter((_, i) => DIAG_SCHEMA_REFUSALS.indexOf(items[i].verdict) < 0);
+    const refused = items.filter((i) => DIAG_SCHEMA_REFUSALS.indexOf(i.verdict) >= 0);
+    return { items, passOps, refused, poisoned };
+}
+
+// 纯函数：把补丁块里的 JSON 数组整段换成 ops（其余文字逐字节保留）。摘不到 / 解析不动 → 原样返回（不替模型改写）。
+function diagPatchWithOps(patchText, ops) {
+    const s = String(patchText == null ? '' : patchText);
+    const got = diagPatchOpsOf(s);
+    if (!got || !Array.isArray(got.ops)) return s;
+    const at = s.indexOf(got.inner, got.m.index);
+    if (at < 0) return s;
+    return s.slice(0, at) + '\n' + JSON.stringify(ops, null, 2) + '\n' + s.slice(at + got.inner.length);
+}
+
+// 纯函数：路径 → 玩家看得懂的字段名（与 🎛 变量编辑器同一套标签；数组下标说「第 N 项」）。
+function diagFieldLabel(segs) {
+    return (Array.isArray(segs) ? segs : []).map((s) => (/^\d+$/.test(String(s)) ? `第 ${Number(s) + 1} 项` : String(s))).join(' › ');
+}
+const DIAG_TYPE_ZH = { string: '文字', number: '数字', int: '整数', boolean: '开关（是/否）', object: '一组字段', array: '列表', null: '空', date: '日期' };
+function diagValShow(v) {
+    if (v === null || v === undefined) return '空';
+    if (typeof v === 'object') { const j = JSON.stringify(v); return j.length > 60 ? j.slice(0, 57) + '…' : j; }
+    return String(v);
+}
+// 纯函数：一条 zod issue（或原生判定码）→ 不带字段名的短原因（spec §6/§7）。认不出的 code 恒走通用句，绝不漏英文。
+function diagSchemaReason(x) {
+    if (typeof x === 'string') {
+        return {
+            'not-extensible': '这一层是卡片没标成可扩展的对象 / 列表，MVU 不允许往里新增项',
+            'delta-target-not-number': '这一项现在的值不是数字也不是日期，delta 做不了加减',
+            'schema-blocked': '路径里有以下划线开头的层级 —— 卡片的 schema 校验层（mvu_zod）会静默拦掉这种改动',
+        }[x] || '没通过这张卡自己的检查（卡片作者没有写原因）';
+    }
+    const i = x || {};
+    if (i.code === 'invalid_type') return '必须是' + (DIAG_TYPE_ZH[i.expected] || '另一种类型');
+    if (i.code === 'invalid_value' || i.code === 'invalid_enum_value') return '只能是：' + (i.values || []).map(diagValShow).join('、');
+    if (i.code === 'too_small' || i.code === 'too_big') return diagBoundPhrase(i);
+    if (i.code === 'invalid_union') { const u = diagUnionPhrase(i); if (u) return u; }
+    if (i.code === 'unrecognized_keys') return '这张卡不允许在这里新增项';   // 严格对象（z.strictObject）上的未知键
+    if (i.code === 'custom' && i.message && !/^Invalid/i.test(i.message)) return `没通过这张卡自己的检查：「${i.message}」`;
+    return '没通过这张卡自己的检查（卡片作者没有写原因）';
+}
+// 纯函数：上下限的说法——认 inclusive（能不能等于）与 origin（数值 / 文字长度 / 列表项数）（minors M5）。
+function diagBoundPhrase(i) {
+    const small = i.code === 'too_small';
+    const n = small ? i.minimum : i.maximum;
+    const excl = i.inclusive === false;
+    if (i.origin === 'string') return small ? (excl ? `长度必须多于 ${n} 个字` : `长度不能少于 ${n} 个字`) : (excl ? `长度必须少于 ${n} 个字` : `长度不能超过 ${n} 个字`);
+    if (i.origin === 'array' || i.origin === 'set') return small ? (excl ? `必须多于 ${n} 项` : `至少要有 ${n} 项`) : (excl ? `必须少于 ${n} 项` : `最多只能有 ${n} 项`);
+    return small ? (excl ? `必须大于 ${n}` : `不能小于 ${n}`) : (excl ? `必须小于 ${n}` : `不能大于 ${n}`);
+}
+// 纯函数：invalid_union → 「必须是：数字 或 文字」（从各分支的 invalid_type 里收集类型；收不到 → null 走通用句）。
+function diagUnionPhrase(i) {
+    const kinds = [];
+    for (const branch of (Array.isArray(i.errors) ? i.errors : [])) {
+        for (const e of (Array.isArray(branch) ? branch : [])) {
+            const zh = e && e.code === 'invalid_type' && DIAG_TYPE_ZH[e.expected];
+            if (zh && kinds.indexOf(zh) < 0) kinds.push(zh);
+        }
+    }
+    return kinds.length ? '必须是：' + kinds.join(' 或 ') : null;
+}
+function diagSchemaItemReason(it) {
+    if (it.verdict === 'zod-rejected') {
+        if (it.detail && it.detail.blockedByOther) {
+            return (Array.isArray(it.detail.baseline) && it.detail.baseline.length)
+                ? `存档里「${diagFieldLabel(it.detail.baseline)}」已经不合规，这张卡现在拒绝一切更新——先修那一格（见存档检查）`
+                : '存档里别处已有不合规的值，这张卡现在拒绝一切更新（见存档检查）';
+        }
+        const first = it.detail && it.detail.issues && it.detail.issues[0];
+        return diagSchemaReason(first || {});
+    }
+    return diagSchemaReason(it.verdict);
+}
+// 纯函数：A 的 T1 块（补丁卡 / 自动诊断记录共用）。什么都没有 → ''（调用方拼接后与旧文逐字节相同）。
+function diagSchemaDryLines(dry) {
+    const items = (dry && Array.isArray(dry.items)) ? dry.items : [];
+    const bad = items.filter((i) => i.verdict === 'zod-rejected' || i.verdict === 'not-extensible'
+        || i.verdict === 'delta-target-not-number' || i.verdict === 'schema-blocked' || i.verdict === 'zod-stripped');
+    const alt = items.filter((i) => i.verdict === 'zod-altered');
+    if (!bad.length && !alt.length) return '';
+    const lines = [];
+    if (bad.length) lines.push(`⚠ 这份修复里有 ${bad.length} 处这张卡不会接受，应用时会跳过：`);
+    for (const it of bad) {
+        lines.push(it.verdict === 'zod-stripped'
+            ? `· ${diagFieldLabel(it.segs)}：这张卡不允许在这里新增项，写进去也会被悄悄丢掉`
+            : `· ${diagFieldLabel(it.segs)}：${diagSchemaItemReason(it)}`);
+    }
+    for (const it of alt) lines.push(`· ${diagFieldLabel(it.segs)}：会被这张卡改成「${diagValShow(it.detail && it.detail.to)}」`);
+    return '\n' + lines.join('\n');
+}
+// 纯函数：B 的存档检查（spec §5）。zod 缺 / 抛错 → null。深路径在前，至多 20 条。
+function diagSaveHealth(zod, stat) {
+    if (!zod || typeof zod.safeParse !== 'function') return null;
+    let res;
+    try { res = zod.safeParse({ stat_data: stat == null ? {} : stat }); } catch (e) { return null; }
+    if (!res || res.success !== false) return { ok: true, total: 0, findings: [] };
+    const issues = (res.error && Array.isArray(res.error.issues)) ? res.error.issues : [];
+    const all = issues.map((i) => {
+        const segs = (Array.isArray(i.path) ? i.path : []).filter((p, k) => !(k === 0 && p === 'stat_data'));
+        const cur = diagWalkSegs(stat, segs);
+        return { segs, code: i.code, now: cur.ok ? cur.value : undefined, expected: i.expected, values: i.values,
+            minimum: i.minimum, maximum: i.maximum, inclusive: i.inclusive, origin: i.origin, errors: i.errors, message: i.message, keys: i.keys };
+    }).sort((a, b) => b.segs.length - a.segs.length);
+    return { ok: false, total: all.length, findings: all.slice(0, 20) };
+}
+function diagSaveHealthSig(h) {
+    if (!h) return '';
+    return JSON.stringify((h.findings || []).map((f) => [f.segs, f.code]));
+}
+// 纯函数：B 的记录正文。spec §7 option a；每条四问：哪一格 / 现在 vs 要求 / 为什么要紧（整条只说一次）/ 怎么修。
+function diagSaveHealthText(h, opts) {
+    if (!h || h.ok) return '🩺 存档检查通过';
+    const one = (f) => {
+        const field = diagFieldLabel(f.segs);
+        // 缺了一整格：🎛 编辑器不新建字段，这一条不许承诺「去编辑器里改」（review 4）。
+        if (f.code === 'invalid_type' && f.now === undefined) return `${field} 在存档里不存在，但这张卡要求它必须有（应是${DIAG_TYPE_ZH[f.expected] || '另一种类型'}）。`;
+        if (f.code === 'invalid_type') return `${field} 现在存的是「${diagValShow(f.now)}」，但这张卡规定它必须是${DIAG_TYPE_ZH[f.expected] || '另一种类型'}。`;
+        if (f.code === 'invalid_value' || f.code === 'invalid_enum_value') return `${field} 现在是「${diagValShow(f.now)}」，这张卡只接受：${(f.values || []).map(diagValShow).join('、')}。`;
+        if (f.code === 'too_small' || f.code === 'too_big') return `${field} 现在是 ${diagValShow(f.now)}，这张卡规定它${diagBoundPhrase(f)}。`;
+        if (f.code === 'invalid_union' && diagUnionPhrase(f)) return `${field} 现在是「${diagValShow(f.now)}」，这张卡规定它${diagUnionPhrase(f)}。`;
+        if (f.code === 'unrecognized_keys') return `${field} 里有这张卡不允许新增的项：${(f.keys || []).map(diagValShow).join('、')}。`;
+        if (f.code === 'custom' && f.message && !/^Invalid/i.test(f.message)) return `${field} 没通过这张卡自己的检查：「${f.message}」`;
+        return `${field} 没通过这张卡自己的检查（卡片作者没有写原因）。`;
+    };
+    const lines = [(opts && opts.stillBroken) ? `🩺 存档检查 —— 还有 ${h.total} 处不合规的值：` : `🩺 存档检查 —— 发现 ${h.total} 处不合规的值：`];
+    for (const f of h.findings) lines.push('⚠ ' + one(f));
+    if (h.total > h.findings.length) lines.push(`（还有 ${h.total - h.findings.length} 处）`);
+    lines.push('因为存档里有不合规的值，这张卡之后的每一次变量更新都会被拒绝（包括讲故事的模型自己写的），所以变量会看起来「怎么都不动」。');
+    lines.push(ENABLE_MVU_EDITOR ? '怎么修：在 🎛 变量编辑器里把它改成符合要求的值。' : '怎么修：把它改成符合要求的值。');
+    return lines.join('\n');
+}
+const SAVE_HEALTH_META_KEY = MODULE + '_saveHealth';
+// 纯函数：这一次存档检查要不要出声（spec §5）。回 null = 不跑（本聊天已首检过）；否则 { note, toast, recovered, meta }。
+// failure 与 first 只在「问题集合变了」时出声（sig 去重）——被污染的存档每回合都会触发 failure，同一件事不许刷屏。
+function diagSaveHealthDecide(prev, h, reason) {
+    if (!h) return null;
+    if (reason === 'first' && prev) return null;
+    const meta = { v: 1, ok: !!h.ok, count: h.total | 0, sig: diagSaveHealthSig(h) };
+    const changed = !prev || prev.sig !== meta.sig;
+    if (reason === 'button') return { note: true, toast: false, recovered: false, meta };
+    if (reason === 'recheck') {
+        const recovered = !!(prev && prev.ok === false && h.ok);
+        // 改完仍不合规：照样说一句（review 4——否则「照着改了、问题还在」没有任何反馈）。
+        const stillBroken = !!(prev && prev.ok === false && !h.ok);
+        return { note: recovered || stillBroken || (!h.ok && changed), toast: false, recovered, stillBroken, meta };
+    }
+    return { note: !h.ok && changed, toast: !h.ok && changed, recovered: false, meta };
+}
+
+// 纯函数：该不该让模型按原因重写一次（spec §4.3）——只看【op 自己造成】的拒绝；存档污染 / 仅改写 不算。
+function diagSchemaRetryWanted(dry) {
+    const items = (dry && Array.isArray(dry.items)) ? dry.items : [];
+    return items.some((i) => (i.verdict === 'zod-rejected' && !(i.detail && i.detail.blockedByOther))
+        || i.verdict === 'not-extensible' || i.verdict === 'delta-target-not-number');
+}
+// 纯函数：给模型的 T6 重写请求（spec §7 T6；【模型可见】，受真模型电池把关）。末句「完整的新补丁」是必要补充：
+// 重写的补丁会【整份替换】第一份，模型若只回改过的那几条，能过的指令就丢了。
+function diagSchemaRetryMessage(dry) {
+    const items = (dry && Array.isArray(dry.items)) ? dry.items : [];
+    const bad = items.filter((i) => (i.verdict === 'zod-rejected' && !(i.detail && i.detail.blockedByOther))
+        || i.verdict === 'not-extensible' || i.verdict === 'delta-target-not-number' || i.verdict === 'zod-stripped');
+    const lines = [`系统：上一份补丁里有 ${bad.length} 处这张卡不会接受，请只针对这几处改一版（其余保持不变）：`];
+    for (const it of bad) {
+        const why = it.verdict === 'zod-stripped' ? '这张卡不允许在这里新增项，写进去也会被悄悄丢掉' : diagSchemaItemReason(it);
+        lines.push(`· ${it.path}（${it.op}）：${why}`);
+    }
+    lines.push('输出一份完整的新补丁（原来能通过的指令原样保留）。');
+    return lines.join('\n');
+}
+
+// 写入口共用：给一块（已过修复流水线的）补丁做预演，回 { text: 只含能过的指令的补丁, dry } 或 null（照旧走）。
+// 任何一步抛错 → null（= 1.88 行为），绝不把一次本该照写的诊断变成失败（spec §9；review 5）。
+function diagSchemaFilterPatch(patchText, mvuData) {
+    if (!ENABLE_SCHEMA_DIAG) return null;
+    try {
+        const got = diagPatchOpsOf(patchText);
+        if (!got || !Array.isArray(got.ops) || !got.ops.length) return null;
+        const zod = soReadZodSchema(mvuData);
+        const dry = diagSchemaDryRun(got.ops, diagStatOf(mvuData), { zod, nativeSchema: mvuData && mvuData.schema });
+        if (!dry) return null;
+        const text = dry.passOps.length === got.ops.length ? patchText : diagPatchWithOps(patchText, dry.passOps);
+        return { text, dry };
+    } catch (e) {
+        return null;
+    }
+}
+
+// 该不该让模型重写一次（spec §4.3）；该 → { message, dry }。已重写过 / 设置关 / 没有 op 自己造成的拒绝 → null。
+function diagSchemaRetryPlan(finalText, mvuData, s, alreadyRetried) {
+    if (!ENABLE_SCHEMA_DIAG || alreadyRetried || !s || !s.diagSchemaRetry) return null;
+    try {
+        const block = extractUpdateBlock(String(finalText == null ? '' : finalText));
+        if (!block) return null;
+        const repaired = repairDiagPatch(block, diagStatOf(mvuData));
+        const sf = diagSchemaFilterPatch(repaired.text, mvuData);
+        if (!sf || !diagSchemaRetryWanted(sf.dry)) return null;
+        return { message: diagSchemaRetryMessage(sf.dry), dry: sf.dry };
+    } catch (e) {
+        return null;
+    }
+}
+
+// 自动诊断的那一次重写（spec §4.3），整轮编排收在一处、可单测（callModel / shouldStop 由调用方注入）。回 { finalText, schemaRetried }。
+//   · 重写调用抛错（网络 / 超时）→ 留第一份回复，它能过的那些照写（review 2：不许因为多问一句反而一条都不写）；
+//     用户中断 / 新回合 supersede（shouldStop）→ 原样抛出，中断语义与 1.88 相同。
+//   · 重写版会【整份替换】第一份：模型要是漏掉了第一份里本来能过的指令（只回改过的那条、或回 []），把漏掉的按路径
+//     补回去——路径已在重写版里出现的绝不再补，免得同一处 delta 算两遍（review 3：硬保证放在代码里，不靠提示词）。
+async function diagSchemaRetryRound(finalText, mvuData, s, messages, callModel, shouldStop) {
+    const plan = mvuData ? diagSchemaRetryPlan(finalText, mvuData, s, false) : null;
+    if (!plan) return { finalText, schemaRetried: null };
+    const msgs2 = (Array.isArray(messages) ? messages : []).concat([{ role: 'assistant', content: finalText }, { role: 'user', content: plan.message }]);
+    let second = null;
+    try { second = await callModel(msgs2); } catch (e) {
+        if (shouldStop && shouldStop()) throw e;
+        return { finalText, schemaRetried: null };
+    }
+    const block2 = extractUpdateBlock(String(second == null ? '' : second));
+    const got2 = block2 ? diagPatchOpsOf(block2) : null;
+    if (!got2 || !Array.isArray(got2.ops)) return { finalText, schemaRetried: null };
+    const have = new Set(got2.ops.map((o) => (o && typeof o.path === 'string') ? o.path : ''));
+    const missing = plan.dry.passOps.filter((o) => o && typeof o.path === 'string' && !have.has(o.path));
+    const merged = missing.length ? diagPatchWithOps(block2, got2.ops.concat(missing)) : block2;
+    const text2 = missing.length ? String(second).replace(block2, merged) : String(second);
+    return { finalText: text2, schemaRetried: { firstDry: plan.dry, merged: missing.length } };
+}
+
+// 纯函数：记录正文 / 推导写回里放哪一块——zod 卡真筛掉了指令时放【实际写入】的那一块（已修复 + 已筛），否则原样
+// （原生卡不筛、无 schema 卡没有 schemaDry → 逐字节同 1.88）（minors M8）。
+function diagShownPatch(result, patchBlock) {
+    const d = result && result.schemaDry;
+    if (d && result.repair && typeof result.repair.text === 'string' && Array.isArray(d.passOps) && Array.isArray(d.items)
+        && d.passOps.length < d.items.length) return result.repair.text;
+    return patchBlock;
+}
+
+// 🩺 B 的唯一触发口：first（本聊天首次见到 zod 卡）/ failure（一次写入零变化或被存档污染挡住）/ button / recheck（🎛 应用后）。
+// 全程兜底：检查失败只丢一行 warn，绝不影响诊断本身。
+async function maybeRunSaveHealth(reason) {
+    if (!ENABLE_SCHEMA_DIAG) return null;
+    try {
+        const Mvu = await getMvu();
+        if (!Mvu || typeof Mvu.getMvuData !== 'function') {
+            if (reason === 'button') appendNoteToRoom('diagnose', { id: ++cidSeq, role: 'note', content: '🩺 存档检查：没有检测到 MVU 变量框架，无法检查。' });
+            return null;
+        }
+        const data = Mvu.getMvuData(mvuMsgOpts());
+        const zod = soReadZodSchema(data);
+        if (!zod) {
+            if (reason === 'button') appendNoteToRoom('diagnose', { id: ++cidSeq, role: 'note', content: '🩺 存档检查：这张卡没有可读取的变量规则（不是 mvu_zod 卡，或酒馆助手版本读不到），无需检查。' });
+            return null;
+        }
+        const h = diagSaveHealth(zod, diagStatOf(data));
+        const md = getChatMetadataSafe();
+        const d = diagSaveHealthDecide(md ? md[SAVE_HEALTH_META_KEY] : null, h, reason);
+        if (!d) return h;
+        if (md) { md[SAVE_HEALTH_META_KEY] = Object.assign({ at: Date.now() }, d.meta); saveChatMetadata(); }
+        if (d.note) {
+            const content = d.recovered ? '🩺 ✓ 存档已恢复正常' : diagSaveHealthText(h, { stillBroken: !!d.stillBroken });
+            const info = (!h.ok && !d.recovered)
+                ? { health: { findings: h.findings.map((f) => Object.assign({}, f, { focus: diagFocusPathOf(f.segs, diagStatOf(data)) })), raw: h.findings.map((f) => `${(f.segs || []).join('.')}: ${f.code} ${f.message || ''}`).join('\n') } }
+                : undefined;
+            appendNoteToRoom('diagnose', { id: ++cidSeq, role: 'note', content }, info);
+        }
+        if (d.toast && !(win && win.style.display !== 'none')) {
+            try { window.toastr && window.toastr.warning && window.toastr.warning(`故事神谕：这张卡的存档里有 ${h.total} 处不合规的值，变量更新会一直失败。打开诊断看详情。`, '故事神谕 · 存档检查', { timeOut: 8000 }); } catch (e) { /* ignore */ }
+        }
+        return h;
+    } catch (e) {
+        console.warn('[Story Oracle] 🩺 存档检查失败（不影响诊断）：', e);
+        if (reason === 'button') {
+            try { appendNoteToRoom('diagnose', { id: ++cidSeq, role: 'note', content: '🩺 存档检查失败：' + (e && e.message ? e.message : String(e)) }); } catch (e2) { /* ignore */ }
+        }
+        return null;
+    }
+}
+
+// 纯函数：zod 的问题路径 → 🎛 编辑器的节点路径。编辑器里列表下标是【数字】（mvuedPathStr 按 JSON 比），
+// zod 路径段可能是数字串，全数字段一律转数字，其余原样。
+// 纯函数：一处存档问题要求的输入类型（只认 invalid_type 的 数字 / 文字 / 开关），给「打开这一格」时用对的输入框（review 4）。
+function diagExpectedEditKind(f) {
+    if (!f || f.code !== 'invalid_type') return null;
+    return (f.expected === 'number' || f.expected === 'string' || f.expected === 'boolean') ? f.expected : null;
+}
+// 纯函数：🎛 叶子按覆盖表换成要求的类型（「很累」→ 数字框、null → 可编辑）；类型变了值清空、下拉 / 滑杆失效。无覆盖 → 原对象。
+function mvuedEffectiveLeaf(nd, overrides) {
+    const k = (overrides && nd && nd.type === 'leaf') ? overrides[mvuedPathStr(nd.path)] : null;
+    if (!k || k === nd.kind) return nd;
+    const same = (k === 'number' && typeof nd.value === 'number') || (k === 'string' && typeof nd.value === 'string') || (k === 'boolean' && typeof nd.value === 'boolean');
+    return Object.assign({}, nd, { kind: k, value: same ? nd.value : (k === 'boolean' ? false : ''), options: null, range: null, canList: false });
+}
+
+// 给了 stat → 只有【列表】里的数字段转数字（记录的键 "1" 仍是字符串——minors M10）；没给 → 旧口径（全数字段转数字）。
+function diagFocusPathOf(segs, stat) {
+    const list = Array.isArray(segs) ? segs : [];
+    if (stat === undefined) return list.map((x) => (/^\d+$/.test(String(x)) ? Number(x) : x));
+    let node = stat;
+    return list.map((x) => {
+        const isArr = Array.isArray(node);
+        const seg = (isArr && /^\d+$/.test(String(x))) ? Number(x) : x;
+        node = (node && typeof node === 'object') ? node[seg] : undefined;
+        return seg;
+    });
+}
+
+// 存档检查记录下的按钮：每一处一个「在变量编辑器里打开这一格」+ 折叠的技术细节。字段名 / 值来自角色卡 → 只走 textContent。
+function addSaveHealthControls(wrap, info) {
+    const list = document.createElement('div');
+    list.className = 'so-apply-bar so-health-bar';
+    if (ENABLE_MVU_EDITOR) {
+        for (const f of (info.findings || [])) {
+            const row = document.createElement('div');
+            const lab = document.createElement('span');
+            lab.textContent = diagFieldLabel(f.segs) + ' ';
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'so-lb-mini';
+            b.textContent = '在变量编辑器里打开这一格';
+            if (f.now === undefined) continue;   // 缺了的一格在编辑器里没有行可跳（编辑器不新建字段）
+            const focusPath = Array.isArray(f.focus) ? f.focus : diagFocusPathOf(f.segs);
+            const focusKind = diagExpectedEditKind(f);
+            b.addEventListener('click', () => { openMvuEditor({ focusPath, focusKind }); });
+            row.appendChild(lab); row.appendChild(b);
+            list.appendChild(row);
+        }
+    }
+    const det = document.createElement('details');
+    const sum = document.createElement('summary');
+    sum.textContent = '技术细节（报障时复制这段）';
+    const pre = document.createElement('pre');
+    pre.textContent = info.raw || '';
+    det.appendChild(sum); det.appendChild(pre);
+    list.appendChild(det);
+    wrap.appendChild(list);
+}
+
 // 纯函数：单条 op 的受理判定。verdict 取值（按判定顺序）：
 //   poison / unknown-verb / bad-path / missing-path / bad-container / bad-delta / vwd-shape
 //   / noop-equal / schema-blocked / not-extensible / delta-target-not-number / type-mismatch
@@ -17685,9 +19905,14 @@ function diagFullReplyOpts(status, raw) {
 //   doubleblock  回复里有两个（或更多）MVU 更新区块 → 一个字都没写，请重掷（1.68.0，Prince 定调）
 //   scoped（1.83.0，可选槽）= 🧩 并写模式裁过的读数 { kept, dropped }：dropped 非空才在末尾追加一行点名；缺席 /
 //                空数组时正文逐字节同旧（老记录零漂移）。
-function autoDiagNoteContent({ status, patch, stamp, detail, raw, report, notice, zero, repair, blocks, scoped }) {
+function autoDiagNoteContent({ status, patch, stamp, detail, raw, report, notice, zero, repair, blocks, scoped, schemaDry, schemaRetried }) {
     const t = stamp ? ' · ' + stamp : '';
     const fixNote = repairDiagNote(repair) + diagCoWriteDroppedLine(scoped);
+    // 🩺 1.89.0：schema 预演读数 + 「已让模型重写一次」（两槽缺席 → ''，旧文逐字节不变）。
+    const retryNote = (schemaRetried && schemaRetried.firstDry)
+        ? `\n↻ 第一份补丁里有 ${(schemaRetried.firstDry.refused || []).length} 处过不了这张卡的规则，已让模型按原因重写一次。`
+        : '';
+    const dryNote = diagSchemaDryLines(schemaDry) + retryNote;
     if (status === 'applied') {
         const body = (patch && patch.trim()) ? `\n${patch.trim()}` : '';
         // notice（Task 7）= 写入落在用户自己那一楼时的落点提示，由调用方【在写入那一刻】算好传进来
@@ -17700,15 +19925,18 @@ function autoDiagNoteContent({ status, patch, stamp, detail, raw, report, notice
         // 没生效的指令。形状对齐 ineffective 那一支：头条说清 M/N，末尾附 diagReportLines 的逐条原因。
         // report 缺席（_.set 方言，无对账依据）或全生效 → 走下面那句，【逐字节】与本次改动之前相同。
         if (report && report.applied < report.total) {
-            return `🔧 自动诊断${t} —— 已修复本回合的 MVU 状态（${report.total} 条指令中 ${report.applied} 条生效，在下方点「撤销」可还原）。${n}${body}${diagReportLines(report)}${fixNote}`;
+            return `🔧 自动诊断${t} —— 已修复本回合的 MVU 状态（${report.total} 条指令中 ${report.applied} 条生效，在下方点「撤销」可还原）。${n}${body}${diagReportLines(report)}${fixNote}${dryNote}`;
         }
-        return `🔧 自动诊断${t} —— 已自动修复本回合的 MVU 状态（在下方点「撤销」可还原）。${n}${body}${fixNote}`;
+        return `🔧 自动诊断${t} —— 已自动修复本回合的 MVU 状态（在下方点「撤销」可还原）。${n}${body}${fixNote}${dryNote}`;
+    }
+    if (status === 'schemarefused') {
+        return `⚠️ 自动诊断${t} —— 这份修复里的每一处都过不了这张卡的规则（未写入）。${dryNote}`;
     }
     if (status === 'failed') {
         return `⚠️ 自动诊断${t} —— 跑完了，但这条更新没能解析 / 应用（已跳过，未改动状态）。`;
     }
     if (status === 'verified') {
-        return `🩺 自动诊断${t} —— 模型核验通过（补丁为空），本回合无需改动。`;
+        return `🩺 自动诊断${t} —— 模型核验通过（补丁为空），本回合无需改动。${dryNote}`;
     }
     if (status === 'ineffective') {
         // 1.67.0：这一支【有证据】—— 一个字都没写，所以逐条一律说死「未生效」+ 原因 + 下一步。
@@ -17717,7 +19945,7 @@ function autoDiagNoteContent({ status, patch, stamp, detail, raw, report, notice
         // 1.68.0：头条走 diagZeroHeadline（与手动路共用那一份）—— 「指令列表没读懂」那一档不能说
         // 「补丁运行了」。zero 缺席时它回默认那句，与加这一步之前【逐字节】相同。
         const z = (zero && zero.text) ? zero.text : diagReportLines(report, 'zero');
-        return `⚠️ 自动诊断${t} —— ${diagZeroHeadline(zero && zero.code)}（未写入）。${fixNote}${z}`;
+        return `⚠️ 自动诊断${t} —— ${diagZeroHeadline(zero && zero.code)}（未写入）。${fixNote}${z}${dryNote}`;
     }
     if (status === 'doubleblock') {
         // 1.68.0：模型在一条回复里甩了两个更新区块。绝不合并、绝不挑一块 —— 说清风险，请重掷。
@@ -17906,6 +20134,7 @@ function notifyAutoDiagnose(result, patch, writeBack, opts) {
                     : (diagZeroHeadline(result && result.zero && result.zero.code) + '（未写入）——详情见诊断记录。'),
                 // 1.68.0：双区块是【模型的输出形状】出问题，与「补丁没生效」是两件事，得各说各的。
                 doubleblock: '模型写了两个更新区块，为安全起见未写入——详情见诊断记录。',
+                schemarefused: '这份修复里的每一处都过不了这张卡的规则（未写入）——详情见诊断记录。',   // 🩺 1.89.0
                 unparsed: '没能读懂模型的回复，本轮没有诊断结论（未改动状态）——详情见诊断记录。',
                 stale: '本轮已跳过：写入前状态 / 聊天已经变了（未写入）——详情见诊断记录。',
             }[status] || '自动诊断跑完了，但这条更新没能解析 / 应用（已跳过）。';
@@ -17939,6 +20168,8 @@ function notifyAutoDiagnose(result, patch, writeBack, opts) {
             repair: result && result.repair,
             blocks: result && result.blocks,   // 1.68.0：双区块那一支要报出「几块」
             scoped: result && result.scoped,   // 1.83.0 🧩 并写：被裁掉的 op 点名（缺席 = 记录逐字节同旧）
+            schemaDry: result && result.schemaDry,   // 🩺 1.89.0：schema 预演读数（缺席 = 记录逐字节同旧）
+            schemaRetried: result && result.schemaRetried,   // 🩺 1.89.0：这一轮让模型按原因重写过一次
             // Task 7（审计簇 D）：落点提示【在这里现算】——记录是持久物、会在很久以后被重画，
             // 那时的最末楼早不是写入时那一楼了。只有真写进去的那一轮才算它。
             notice: status === 'applied' ? diagUserFloorNotice() : '',
@@ -17951,6 +20182,8 @@ function notifyAutoDiagnose(result, patch, writeBack, opts) {
         // 结构性互斥——unparsed 那一支没有 snapshot/patch）。
         const undoable = (snapshot && patch) ? { snapshot, applied: result.applied, patch, writeBack: writeBack || null } : null;
         appendNoteToRoom('diagnose', entry, undoable || diagFullReplyOpts(status, result && result.raw));   // 自动诊断记录归入【诊断房间】（不可见时直接落其元数据、不上屏）
+        // 🩺 1.89.0：被存档污染挡住 → 紧跟着让存档检查说清是哪一格（去重在 maybeRunSaveHealth 里）。
+        if (ENABLE_SCHEMA_DIAG && result && result.schemaDry && result.schemaDry.poisoned) maybeRunSaveHealth('failure');
     } catch (e) { console.warn('[Story Oracle] 自动诊断记录写入侧聊失败：', e); }
 }
 
@@ -18773,8 +21006,8 @@ function buildWindow() {
             ${ENABLE_AUTO_DIAGNOSE ? '<label class="so-check so-lb-check"><input id="so-diag-auto" type="checkbox"><span>自动诊断每条新回复（后台自动检查并修复 MVU）</span></label>\n            <div class="so-hint">每收到一条新的 AI 回复就在后台检查其中的变量更新，发现问题自动修复，并在诊断记录里留一条可撤销的记录。窗口关着也照常工作——诊断按钮变红就表示它在后台跑着。每条回复会多发一次模型请求。</div>\n            <label class="so-check so-lb-check"><input id="so-diag-mvu-compat" type="checkbox"><span>⏳ 兼容 MVU「额外模型解析」</span></label>\n            <div class="so-hint">只有同时使用自动诊断与 TavernHelper / MVU 的「额外模型解析」时才勾选。每条 AI 回复先观察 4 秒启动窗；一旦外部解析启动，会等完整重试批次结束。成功写出更新块就核验；失败或没有有效更新块，就由自动诊断照常推导。最多等 10 分钟，仍未收尾则本轮安全跳过、不抢写。若自动校正也开启，它会在落新 swipe 前共享这次等待并合并更新块。</div>\n            <label class="so-check so-lb-check"><input id="so-diag-cowrite" type="checkbox"><span>🧩 允许与其他脚本并写 MVU</span></label>\n            <div class="so-hint">某些卡脚本 / 扩展会在诊断期间改写 MVU。勾选后自动诊断仍会执行，但只写入未被改动的值，被改动的值跳过不写。</div>\n            <label class="so-check so-lb-check"><input id="so-diag-retry" type="checkbox"><span>🔁 失败自动重试</span></label>\n            <div class="so-hint">自动诊断这一轮没跑成时自动再试（每次重试都会重新读取当前状态、再发一次模型请求）。在下方勾选哪些失败情形需要重试；成功、无需改动、以及安全跳过（切聊天 / 状态已变 / 手动中断）永不重试。</div>\n            <div id="so-diag-retry-opts">\n            <label class="so-field"><span>最多重试次数</span><input id="so-diag-retry-count" type="number" step="1" min="1" max="99"></label>\n            <label class="so-check so-lb-check"><input id="so-diag-retry-empty" type="checkbox"><span>空白回复（模型没返回内容）</span></label>\n            <label class="so-check so-lb-check"><input id="so-diag-retry-format" type="checkbox"><span>格式错误（没能读懂 / 拒收模型给的更新）</span></label>\n            <label class="so-check so-lb-check"><input id="so-diag-retry-error" type="checkbox"><span>调用失败（网络错误 / 超时等）</span></label>\n            </div>' : ''}
             ${ENABLE_DIAG_BODY_INJECT ? '<label class="so-check so-lb-check"><input id="so-diag-inject" type="checkbox"><span>把诊断修正写进正文 —— 开启后，诊断的修正（自动与手动）会写进这条回复的更新区块——撤销时一并移除。</span></label>' : ''}
             <label class="so-check so-lb-check"><input id="so-diag-preset" type="checkbox"><span>套用我的补全预设（诊断指令叠加其上）</span></label>
-            <div class="so-hint so-diag-preset-warn">⚠ 仅在诊断确实被模型拒绝时才勾选：预设的额外内容会分散模型注意力、影响诊断精度。</div>
-            ${ENABLE_MVU_EDITOR ? '<div class="so-mvued-row"><button type="button" class="so-lb-mini" id="so-mvued-btn">🎛 变量编辑器 —— 直接查看 / 修改当前变量</button></div>' : ''}
+            <div class="so-hint so-diag-preset-warn">⚠ 仅在诊断确实被模型拒绝时才勾选：预设的额外内容会分散模型注意力、影响诊断精度。</div>${ENABLE_SCHEMA_DIAG ? '\n            <label class="so-check so-lb-check"><input id="so-diag-schema-retry" type="checkbox"><span>被拒时让模型自动重写一次（多花一次调用）</span></label>' : ''}
+            ${ENABLE_MVU_EDITOR ? '<div class="so-mvued-row"><button type="button" class="so-lb-mini" id="so-mvued-btn">🎛 变量编辑器 —— 直接查看 / 修改当前变量</button></div>' : ''}${ENABLE_SCHEMA_DIAG ? '\n            <div class="so-mvued-row"><button type="button" class="so-lb-mini" id="so-diag-health-btn">🩺 检查存档</button></div>' : ''}
             <div id="so-diag-wisel">
             <label class="so-check so-lb-check"><input id="so-diag-usesel" type="checkbox"><span>诊断使用精选世界书条目（关闭则用默认扫描）</span></label>
             <div class="so-hint">开启后可【按本聊天】挑选要喂给诊断的世界书条目，无视其在 ST 里的启用 / 禁用状态——解决「禁用了变量规则条目后诊断就看不到」与「全量太吵」的两难。首次开启会按当前激活情况预选一份，之后随你增删、按聊天记忆。</div>
@@ -18906,6 +21139,9 @@ function buildWindow() {
                     + '<button type="button" id="so-fixc-tpl-new" class="so-fix-run-btn">新建…</button>'
                     + '<button type="button" id="so-fixc-tpl-save" class="so-fix-run-btn">保存</button>'
                     + '<button type="button" id="so-fixc-tpl-del" class="so-fix-run-btn">删除</button>'
+                    // 🌐 模板广场（1.86.0）：旗关时这里是空串——DOM 与 1.85.3 逐字节相同。
+                    + (ENABLE_FIX_TEMPLATE_HUB ? '<button type="button" id="so-fixc-hub" class="so-fix-run-btn" title="浏览、下载大家分享的模板">🌐 广场</button>' : '')
+                    + (ENABLE_FIX_TEMPLATE_HUB ? '<button type="button" id="so-fixc-share" class="so-fix-run-btn" title="把当前模板分享到广场">📤 分享</button>' : '')
                     + '</div>'
                     // 「未保存」标记：fixTplDirty 的唯一可视化（updateFixTplDirtyMarker 是唯一写它的地方）。
                     // 默认 hidden——旗关时这一整段本就不渲染，旗开而不脏时它也不占视觉。
@@ -19006,7 +21242,7 @@ function buildWindow() {
                 <input id="so-adv-depth" type="number" step="1" min="0">
             </label>
             ${ENABLE_SEQ_PULSE ? '<label class="so-check so-adv-check"><input id="so-seq-pulse" type="checkbox"><span>落拍感应（自动提示当前拍可能已完成）</span></label>' : ''}
-            ${ENABLE_DB_BRIDGE ? '<label class="so-check so-adv-check"><input id="so-adv-dbbridge" type="checkbox"><span>数据库联动（实验）——装了 SP·数据库 且开着「剧情推进」时勾上，让它的规划也听当前引导</span></label><div class="so-hint" id="so-adv-dbbridge-hint"></div>' : ''}${ENABLE_DB_BRIDGE && ENABLE_DB_BRIDGE_KEEP ? '<label class="so-check so-adv-check" id="so-adv-dbbridge-strip-row"><input id="so-adv-dbbridge-strip" type="checkbox"><span>发给主模型前剥掉引导块（取消勾选 = 引导留在玩家消息里，主模型也能看到）</span></label>' : ''}
+            ${ENABLE_DB_BRIDGE ? '<label class="so-check so-adv-check"><input id="so-adv-dbbridge" type="checkbox"><span>数据库联动（实验）——装了 SP·数据库 且开着「剧情推进」时勾上，让它的规划也听当前引导</span></label><div class="so-hint" id="so-adv-dbbridge-hint"></div>' : ''}${ENABLE_DB_BRIDGE && ENABLE_DB_BRIDGE_KEEP ? '<label class="so-check so-adv-check" id="so-adv-dbbridge-strip-row"><input id="so-adv-dbbridge-strip" type="checkbox"><span>发给主模型前剥掉引导块（取消勾选 = 引导留在玩家消息里，主模型也能看到）</span></label>' : ''}${ENABLE_NEXT_BEAT ? '<label class="so-check so-adv-check"><input id="so-adv-nbeat" type="checkbox"><span>下一拍建议——在主聊天最新回复下方给出几条你接下来可以发的话，点一下填进输入框</span></label><div class="so-hint" id="so-adv-nbeat-hint"></div><details class="so-adv-nbeat-more" id="so-adv-nbeat-more"><summary>下一拍建议 · 更多设置</summary><div class="so-adv-nbeat-body"><label class="so-check so-adv-check"><input id="so-adv-nbeat-auto" type="checkbox"><span>每条新回复自动生成（每条回复多花一次 API 调用；不勾 = 点卡片上的「生成建议」才生成）</span></label><label class="so-field so-adv-field"><span>喂给它的最新回复最多截取多少字（100–20000，默认 4000）</span><input id="so-adv-nbeat-chars" type="number" step="100" min="100" max="20000"></label><label class="so-field so-adv-field"><span>选项写法（附在请求里的额外要求；清空 = 不附）</span><textarea id="so-adv-nbeat-tpl" rows="8"></textarea></label><div class="so-adv-nbeat-btns"><button type="button" class="so-plan-mini" id="so-adv-nbeat-tpl-reset">↺ 恢复默认</button><button type="button" class="so-plan-mini" id="so-adv-nbeat-tpl-clear">✕ 清空</button></div></div></details>' : ''}
             <button type="button" class="so-plan-mini" id="so-arc-new" title="实验性功能：把整条剧情弧线交给神谕做长程引导（仍在打磨）" style="display:none"><i class="fa-solid fa-route"></i> 新建弧线（手动·实验性）</button>
             <div id="so-arc-form" style="display:none">
                 <div class="so-hint so-arc-exp-warn">⚠ 弧线系统是实验性功能：长程引导（多拍 / 盲盒 / 自动起草骨架）仍在打磨，行为可能随版本调整。上面的单拍「开始引导」已稳定，不受影响。</div>
@@ -19384,6 +21620,11 @@ function bindControls() {
         const mvuedBtn = win.querySelector('#so-mvued-btn');
         if (mvuedBtn) mvuedBtn.addEventListener('click', () => { openMvuEditor(); });
     }
+    // 🩺 1.89.0：存档检查按钮（按一次就查一次，结果进诊断记录）。
+    if (ENABLE_SCHEMA_DIAG) {
+        const hb = win.querySelector('#so-diag-health-btn');
+        if (hb) hb.addEventListener('click', () => { maybeRunSaveHealth('button'); });
+    }
     // 诊断经自定义补全预设（1.43.0，opt-in）——全局开关，同 advisorUsePreset 写法（写 getSettings + save）。
     win.querySelector('#so-diag-preset').addEventListener('change', (e) => {
         const s2 = getSettings();
@@ -19395,6 +21636,11 @@ function bindControls() {
                 : '已勾选「套用补全预设」，但目前还没有整理好的补全预设。请先到设置（齿轮）里选定并整理一个补全预设；在此之前，诊断仍用内置提示词。');
         }
     });
+    // 🩺 1.89.0：「被拒时让模型自动重写一次」（全局开关，写 getSettings + save）。
+    if (ENABLE_SCHEMA_DIAG) {
+        const sr = win.querySelector('#so-diag-schema-retry');
+        if (sr) sr.addEventListener('change', (e) => { getSettings().diagSchemaRetry = e.target.checked; save(); });
+    }
     // 诊断「精选世界书条目」绑定（用户功能请求；ENABLE_DIAG_WI_PICKER）。关掉时隐藏那一段、不挂任何处理器。
     if (ENABLE_DIAG_WI_PICKER) {
         win.querySelector('#so-diag-usesel').addEventListener('change', (e) => onDiagUseSelToggle(e.target.checked));
@@ -19661,6 +21907,7 @@ function bindControls() {
         if (ENABLE_DB_BRIDGE_KEEP) bind('#so-adv-dbbridge-strip', 'dbBridgeStrip');
         if (ENABLE_DB_BRIDGE_KEEP) win.querySelector('#so-adv-dbbridge-strip').addEventListener('change', dbBridgeRefreshHint);
     }
+    if (ENABLE_NEXT_BEAT) nbeatBindSettings(bind);   // 🧭 下一拍建议（1.87.0）：主勾选 / 自动 / 截取字数 / 选项写法
     bind('#so-card', 'includeCard');
     bind('#so-stat', 'chatIncludeStat');
     bind('#so-world', 'chatIncludeWorld');
@@ -19986,6 +22233,11 @@ function bindControls() {
                 toastr.success(`已删除模板「${name}」`);
             }
         });
+        // 🌐 模板广场（1.86.0）：旗关时按钮根本没渲染，这里同门跳过。
+        if (ENABLE_FIX_TEMPLATE_HUB) {
+            win.querySelector('#so-fixc-hub').addEventListener('click', openFixHub);
+            win.querySelector('#so-fixc-share').addEventListener('click', () => { openFixShare(); });
+        }
         win.querySelector('#so-fixc-mech').addEventListener('change', async (e) => {
             if (!e.target.checked && !getSettings().customFixWarned) {
                 const ok = await uiConfirm('关掉后，状态栏 / 变量块也会一起交给模板，模板输出会原样替换整条回复。原文仍留在 swipe 0。确定？');
@@ -20024,8 +22276,12 @@ function bindControls() {
     win.querySelector('#so-sysprompt-preset').addEventListener('change', (e) => onPresetSelected(e.target.value));
     win.querySelector('#so-sysprompt-preset-refresh').addEventListener('click', populateSysPromptPresets);
     win.querySelector('#so-sysprompt-preset-recurate').addEventListener('click', () => {
-        const cur = getSettings().sysPromptPresetName;
-        if (cur) openCuration(cur);
+        const s = getSettings();
+        const cur = s.sysPromptPresetName;
+        if (!cur) return;
+        // 回显【已保存】的挑选（1.88.0）：不带种子行就会按分类器默认重建，用户以为没存上、再存一遍反把选择盖掉。
+        const snap = getCuratedSnapshot(s, cur);
+        openCuration(cur, snap ? curationRowsFromSnapshot(buildCurationRows(cur), snap) : undefined);
     });
     // 系统提示词：上方下拉决定文本框正在编辑哪个模式的提示词；文本框各模式共用，
     // 写入时按当前所选模式写到对应的 key（chat: systemPrompt；diagnose/lorebook: 覆盖）。
@@ -20071,8 +22327,11 @@ function bindControls() {
         updateBadge();
         save();
     });
+    // 1.85.1：Enter 是否发送跟随酒馆「用户设置 → 按 Enter 发送」（手机默认 Enter 换行）——判据见 soEnterShouldSend。
+    // 设置在【按键当时】读，用户在酒馆里改了立即生效，不必重开窗口。
     inputEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key !== 'Enter') return;
+        if (soEnterShouldSend(e, soReadSendOnEnter(), soIsMobileForEnter())) {
             e.preventDefault();
             onSend();
         }
@@ -20110,6 +22369,7 @@ function loadSettingsIntoForm() {
         if (ENABLE_DB_BRIDGE_KEEP) win.querySelector('#so-adv-dbbridge-strip').checked = s.dbBridgeStrip !== false;
         dbBridgeRefreshHint();
     }
+    if (ENABLE_NEXT_BEAT) nbeatLoadSettingsIntoForm(s);   // 🧭 下一拍建议（1.87.0）
     win.querySelector('#so-card').checked = !!s.includeCard;
     win.querySelector('#so-stat').checked = !!s.chatIncludeStat;
     win.querySelector('#so-world').checked = !!s.chatIncludeWorld;
@@ -20165,6 +22425,7 @@ function loadSettingsIntoForm() {
 
     win.querySelector('#so-adv-preset').checked = !!s.advisorUsePreset;
     win.querySelector('#so-diag-preset').checked = !!s.diagnoseUsePreset;
+    if (ENABLE_SCHEMA_DIAG) { const sr = win.querySelector('#so-diag-schema-retry'); if (sr) sr.checked = !!s.diagSchemaRetry; }
     updateWiHint();
     populatePersonas();
     // 系统提示词模式编辑器：首次用 SYSPROMPT_MODES 填充模式下拉，再把当前所选模式的
@@ -20691,6 +22952,62 @@ function snapshotFromRows(rows) {
     return { items, curatedAt: Date.now() };
 }
 
+// 「重新挑选」的行表 = 以【已保存的快照】为真相重建（1.88.0）。报障：再点重新挑选打开时永远是分类器默认勾选，
+// 像是根本没保存（保存其实一直生效——组装走 curatedPresets——只是弹窗从不回显它）；用户于是再存一遍，把默认勾选
+// 盖回自己的真实选择。口径：
+//   · 勾选行 = 快照条目、按快照顺序；正文 / 角色取【冻结版】（活预设的改动不许漏进来，同 curatedPresets 的初衷；
+//     想要预设的新正文 → 「重置默认」）；停用标记 / 分类沿用现读行（只是显示）。
+//   · 未勾选行 = 现读行里没被快照认领的，恒不勾，插在它在预设顺序里最近的前驱之后（无前驱 → 排最前）。
+//   · 预设里已删掉、快照里还在用的块 → 仍以勾选行出现（它确实在用，丢掉就等于悄悄改了用户的组装）。
+// 认领按 kind + identifier（无 identifier 的旧快照退回 name），每条现读行只认领一次。
+// 于是「打开后原样保存」= 快照逐项相同。空 / 坏快照 → 原样返回现读行。纯函数，不改入参。
+function curationRowsFromSnapshot(freshRows, snap) {
+    const fresh = Array.isArray(freshRows) ? freshRows : [];
+    const items = (snap && Array.isArray(snap.items)) ? snap.items : [];
+    if (!items.length) return fresh.slice();
+    const keyOf = (kind, identifier, name) => `${kind}\u0000${identifier != null && identifier !== '' ? identifier : '\u0001' + (name || '')}`;
+    const claimed = new Map();   // fresh 下标 → 输出行
+    const out = [];
+    for (const it of items) {
+        if (!it || typeof it !== 'object') continue;
+        const kind = it.kind === 'marker' ? 'marker' : 'text';
+        const k = keyOf(kind, it.identifier, it.name);
+        const idx = fresh.findIndex((r, i) => !claimed.has(i) && keyOf(r.kind, r.identifier, r.name) === k);
+        const base = idx >= 0 ? fresh[idx] : null;
+        let r;
+        if (kind === 'marker') {
+            r = base ? { ...base, name: it.name || base.name, keep: true } : {
+                identifier: it.identifier, name: it.name || it.identifier || '', role: 'system', kind: 'marker',
+                content: '', chars: 0, keep: true, disabled: false, category: 'marker', note: '上下文插槽',
+            };
+        } else {
+            const content = String(it.content == null ? '' : it.content);
+            const role = it.role || 'system';
+            const c = base ? null : classifyBlock({ identifier: it.identifier, name: it.name, role, content });
+            r = {
+                ...(base || { disabled: false, category: c.category, note: c.note }),
+                identifier: it.identifier, name: it.name || (base && base.name) || '', role, kind: 'text',
+                content, chars: content.length, keep: true,
+            };
+        }
+        if (idx >= 0) claimed.set(idx, r);
+        out.push(r);
+    }
+    fresh.forEach((fr, i) => {
+        if (claimed.has(i)) return;
+        const r = { ...fr, keep: false };
+        let at = 0;
+        for (let j = i - 1; j >= 0; j--) {
+            const prev = claimed.get(j);
+            const pos = prev ? out.indexOf(prev) : -1;
+            if (pos >= 0) { at = pos + 1; break; }
+        }
+        out.splice(at, 0, r);
+        claimed.set(i, r);
+    });
+    return out;
+}
+
 function getCuratedSnapshot(s, name) {
     const cp = s.curatedPresets;
     return (cp && typeof cp === 'object' && cp[name]) || null;
@@ -21186,6 +23503,48 @@ function escapeHtml(str) {
 function escapeAttr(str) { return escapeHtml(str); }
 
 /* ------------------------------------------------------------------ *
+ * 输入框「Enter 发送」（1.85.1）
+ * 报障：手机键盘没有 Shift+Enter，神谕输入框里按 Enter 永远是发送、换不了行。
+ * 修法（Prince 裁：不加新设置、不加新文案）：跟随酒馆自己的「用户设置 → 按 Enter 发送」
+ * （power_user.send_on_enter：-1 禁用 / 0 自动〔默认：电脑 Enter 发送、手机 Enter 换行〕/ 1 启用）。
+ * 判据逐条对齐 ST 主输入框（对着真源码钉，public/scripts/RossAscends-mods.js）：
+ *   · shouldSendOnEnter()：DISABLED → 不发；AUTO → !isMobile()；ENABLED → 发。
+ *   · processHotkeys()：!event.isComposing && !shiftKey && !ctrlKey && !altKey && key == 'Enter'。
+ * 在它之上只多挡一条 keyCode 229（输入法正在处理的按键；Safari 提交候选那一下 isComposing 可能已是 false）
+ * ——只会让中文输入法「回车上屏」少发一次，永远不会多发。读不到设置 / 非法值一律按 0 自动（ST 默认）。
+ * ------------------------------------------------------------------ */
+function soEnterShouldSend(e, sendOnEnter, mobile) {
+    if (!e || e.key !== 'Enter') return false;
+    if (e.isComposing || e.keyCode === 229) return false;   // 输入法选词 / 上屏的回车绝不发送
+    if (e.shiftKey || e.ctrlKey || e.altKey) return false;  // 同 ST：带修饰键的 Enter 不算「发送」
+    const v = Number(sendOnEnter);
+    if (v === -1) return false;   // 禁用：Enter 永远换行，只能点发送按钮
+    if (v === 1) return true;     // 启用：手机上也 Enter 发送
+    return !mobile;               // 0 自动（及读不到 / 非法值）：电脑发送、手机换行
+}
+
+// 按键当时读酒馆设置（不缓存）；getContext 不可用时退回 0 自动。
+function soReadSendOnEnter() {
+    try {
+        const pu = getCtx()?.powerUserSettings;
+        const v = pu ? pu.send_on_enter : undefined;
+        return (v === undefined || v === null) ? 0 : v;
+    } catch (e) { return 0; }
+}
+
+// 「是不是手机」用 ST 自己的 isMobile()（UA 判 mobile / tablet，与主输入框同一口径）；
+// 老版本 ST 的 getContext 没暴露它时，退回本文件 focusOracleInput 同款的粗指针判据。
+function soIsMobileForEnter() {
+    try {
+        const ctx = getCtx();
+        if (ctx && typeof ctx.isMobile === 'function') return !!ctx.isMobile();
+    } catch (e) { /* 落到下方兜底 */ }
+    try {
+        return typeof window.matchMedia === 'function' && !!window.matchMedia('(pointer: coarse)').matches;
+    } catch (e) { return false; }
+}
+
+/* ------------------------------------------------------------------ *
  * Show / hide
  * ------------------------------------------------------------------ */
 // 触屏（主指针为粗指针）上聚焦输入框会弹出软键盘：压缩可见视口、打断操作（用户报「一切换就弹」）。
@@ -21378,6 +23737,7 @@ async function toggleDiagnose() {
     const entering = !diagnoseMode;
     if (!(await confirmModeSwitch(entering ? 'diagnose' : 'chat'))) return;   // 1.36.0 中断确认
     setOracleMode(entering ? 'diagnose' : 'chat');
+    if (entering && ENABLE_SCHEMA_DIAG) maybeRunSaveHealth('first');   // 🩺 1.89.0：本聊天首次进诊断 → 查一次存档
     // 退出时若自动仍武装，明说它还在跑 —— 按钮变红是同一件事的视觉信号，但文字得跟上（旧设计里
     // 退出＝顺手关掉自动，用户会带着旧预期点这颗按钮）。
     const autoOn = ENABLE_AUTO_DIAGNOSE && !!getSettings().autoDiagnoseEnabled;
@@ -22181,11 +24541,13 @@ function addBridgeChip() {
         // 每模式独立房间：把普通聊天房间的问答轮导入当前参谋房间（分隔线在前），随后发起整理请求。
         if (ENABLE_MODE_ROOMS) {
             const turns = buildImportedTurns(getConvoMeta('main'));
-            for (const t of turns) {
-                const e = { id: ++cidSeq, role: t.role, content: t.content };
-                convo.push(e);
-                e._el = (t.role === 'note') ? addNoteMessage(e) : addMessage(t.role, t.content, e);
-            }
+            soBulkRender(() => {   // 1.85.3 批量导入不逐条滚，下面统一滚一次
+                for (const t of turns) {
+                    const e = { id: ++cidSeq, role: t.role, content: t.content };
+                    convo.push(e);
+                    e._el = (t.role === 'note') ? addNoteMessage(e) : addMessage(t.role, t.content, e);
+                }
+            });
             if (turns.length) { persistConvo(); scrollToBottom(); }
         }
         inputEl.value = '把我们刚才讨论的剧情走向，整理成可以采用的方案吧。';
@@ -26489,6 +28851,47 @@ function renderReplyHtml(text) {
     return null;
 }
 
+// ✨ 校正结果卡的渲染分道（1.84.1）。
+// 背景：有些卡/预设的「美化」不是内联小部件（状态栏、天气头、思维链折叠那种），而是一整份 HTML
+// 文档——显示阶段正则把正文替换成一个 ``` 代码围栏，围栏里装着 <!DOCTYPE html>…。主聊天里
+// 酒馆助手（JS-Slash-Runner）会把这种围栏渲成 iframe 并藏掉 <pre>；神谕窗口没有那个渲染器，
+// 于是 ST 格式化出来的 <pre><code>&lt;!DOCTYPE html&gt;…</code></pre> 就原封不动地摊在结果卡上
+// （创世回廊 ~100KB 字面 HTML，正文埋在里头 —— Discord 报障）。
+// 处置（中间路线）：保留今天的「照主聊天渲染」，只在【ST 格式化后的 HTML 里出现酒馆助手会 iframe 掉的
+// <pre>】这一种情形整条改走 renderMarkdownOnly（showdown + DOMPurify，不跑 ST 正则）——内联美化
+// 一律照旧逐字节渲染。判据与酒馆助手 src/util/is_frontend.ts 对齐（三子串 'html>' / '<head>' / '<body'，
+// 对【解码后】的 <pre> 文本判定，因为格式化输出的是 &lt;!DOCTYPE html&gt;）。
+// ✂️ 选段结果走 textContent、流式直播本就是纯文本，都不经这里，一个字不动。
+// PURE（只读传入字符串 + 一次性 <template> 解析）：判定 ST 格式化后的 HTML 里是否有
+// 酒馆助手会当成「前端界面」接管的 <pre> 代码块。任何异常 / 无 DOM → false（fail-open = 今天的行为）。
+function fixHtmlHasFrontendPayload(html) {
+    if (typeof html !== 'string' || !html) return false;
+    try {
+        if (typeof document === 'undefined' || typeof document.createElement !== 'function') return false;
+        const tpl = document.createElement('template');
+        tpl.innerHTML = html;
+        const root = tpl.content || tpl;
+        const pres = root.querySelectorAll ? root.querySelectorAll('pre') : [];
+        for (const pre of pres) {
+            const text = String(pre.textContent || '');
+            // 酒馆助手 isFrontend：三子串任一命中即接管为 iframe（src/util/is_frontend.ts）。
+            if (text.includes('html>') || text.includes('<head>') || text.includes('<body')) return true;
+        }
+    } catch (e) {
+        console.warn('[Story Oracle] frontend-payload probe failed; keeping ST formatting.', e);
+    }
+    return false;
+}
+
+// 校正结果卡专用渲染器：先照常走 ST 格式化；只有当结果里含 iframe 型前端载荷时才整条退回
+// 纯 Markdown 渲染。返回 null 与 renderReplyHtml 同义（调用方回退 textContent）。
+function renderFixResultHtml(text) {
+    const html = renderReplyHtml(text);
+    if (html == null) return null;
+    if (!fixHtmlHasFrontendPayload(html)) return html;
+    return renderMarkdownOnly(text);
+}
+
 // PURE：把参谋回复按 <StoryPlan> 块切成有序段表（1.18.2 参谋 Markdown）。平铺不变量：
 // segments.map(g=>g.text).join('') === 原文——渲染层怎么分道都绝不丢字。闭合块与 parseStoryPlans 同一
 // 配对规则（大小写不敏感、非贪婪到最近闭合、同样容错 <story_plan>/<story-plan> 等方言变体）；未闭合的
@@ -27274,7 +29677,11 @@ async function generateReply() {
             if (diagnoseMode) {
                 // 第 4 参 finalText（1.68.0）：双区块闸要数「MVU 会执行几块」，而 block 只是最早那一个
                 // 包装块 —— 模型甩两个包装块时，第二块的指令会被静默丢掉。
-                if (block) addApplyControls(assistantEl, block, aEntry, finalText);
+                if (block) {
+                    addApplyControls(assistantEl, block, aEntry, finalText);
+                    // 🩺 1.89.0：应用键上方先说清这张卡不会接受哪几处；必要时自动发一次重写请求（spec §4.2/§4.3）。
+                    if (ENABLE_SCHEMA_DIAG) diagSchemaAfterManualReply(assistantEl, finalText, aEntry);
+                }
             } else if (lorebookMode) {
                 const parsed = parseLorebookBlocks(finalText);
                 if (parsed.ops.length || parsed.errors.length) addLorebookApplyControls(assistantEl, parsed, aEntry);
@@ -27750,7 +30157,7 @@ function renderFixCard(assistantEl, contentEl, aEntry, finalText) {
     const parsed = { fixed: r.fixed, problems: r.problems };   // 保持下游 parsed.fixed / parsed.problems / addFixApplyControls 契约不变
     aEntry.content = parsed.fixed;   // 历史里存干净的校正正文，而非原始 <FixedReply> 标签
     persistConvo();
-    const html = renderReplyHtml(parsed.fixed);
+    const html = renderFixResultHtml(parsed.fixed);
     if (html != null) {
         contentEl.innerHTML = html;
         contentEl.classList.add('so-rendered');
@@ -27830,7 +30237,7 @@ function renderFixForwardCard(assistantEl, contentEl, aEntry, finalText) {
     const parsed = { fixed: run.fixed, problems: '' };
     aEntry.content = parsed.fixed;
     persistConvo();
-    const html = renderReplyHtml(parsed.fixed);
+    const html = renderFixResultHtml(parsed.fixed);
     if (html != null) {
         contentEl.innerHTML = html;
         contentEl.classList.add('so-rendered');
@@ -27876,7 +30283,7 @@ function renderFixForwardCard(assistantEl, contentEl, aEntry, finalText) {
             parsed.fixed = rev.text;                       // 同一个对象 → 注册表与应用按钮都跟着走
             aEntry.content = parsed.fixed;
             persistConvo();
-            const h = renderReplyHtml(parsed.fixed);
+            const h = renderFixResultHtml(parsed.fixed);
             if (h != null) contentEl.innerHTML = h; else contentEl.textContent = parsed.fixed;
             return true;
         });
@@ -29658,7 +32065,7 @@ async function runFixByTargetsPieces(s) {
             const spliced2 = join.head + r.fixedCore + join.tail;
             aEntry.content = r.after;
             persistConvo();
-            const html2 = renderReplyHtml(r.after);
+            const html2 = renderFixResultHtml(r.after);
             if (html2 != null) {
                 contentEl.innerHTML = html2;
                 contentEl.classList.add('so-rendered');
@@ -29687,7 +32094,7 @@ async function runFixByTargetsPieces(s) {
         const spliced = fixSpliceTable(table, results);
         aEntry.content = summary.afterJoined;   // 历史存干净的校正正文拼接（同 renderFixCard 惯例）
         persistConvo();
-        const html = renderReplyHtml(summary.afterJoined);
+        const html = renderFixResultHtml(summary.afterJoined);
         if (html != null) {
             contentEl.innerHTML = html;
             contentEl.classList.add('so-rendered');
@@ -31344,6 +33751,17 @@ function addMessage(role, content, entry) {
 
     const wrap = document.createElement('div');
     wrap.className = `so-msg so-${role}`;
+    // 1.85.3 入场动画只给【直播新到】的气泡：批量重画出来的历史不挂；挂了的在动画放完后摘掉，
+    // 否则每次开窗（display:none → flex 会重启 CSS 动画）几百条历史一起重播淡入。
+    // 判 target + 动画名：气泡里的子元素动画（选段闪烁等）的 animationend 会冒泡上来。
+    if (soBulkRenderDepth === 0) {
+        wrap.classList.add('so-msg-new');
+        wrap.addEventListener('animationend', function soMsgNewDone(ev) {
+            if (ev.target !== wrap || (ev.animationName && ev.animationName !== 'so-msg-in')) return;
+            wrap.classList.remove('so-msg-new');
+            wrap.removeEventListener('animationend', soMsgNewDone);
+        });
+    }
     if (entry) wrap.dataset.cid = entry.id;
     const icon = role === 'user' ? 'fa-user' : 'fa-moon';
     const label = role === 'user' ? '你' : '神谕';
@@ -31541,6 +33959,60 @@ function addRetryControl(assistantEl, entry) {
     });
 }
 
+// 🩺 1.89.0：手动诊断的补丁卡 —— 应用键上方先说清哪几处这张卡不会接受（T1），必要时自动发一次重写请求（T6）。
+// 重写请求是侧聊里一条看得见的用户消息（schemaRetry 标记），同一轮只发一次；旧卡标「已由下一张替代」。
+// 全程兜底：任何一步抛错只丢一行 warn，绝不影响那张卡本身的「应用」。
+// 纯函数：这条用户消息是不是我们发的「重写请求」（标记只活在内存里、重载后靠内容前缀认——minors M7）。
+function diagSchemaIsRetryTurn(e) {
+    return !!(e && (e.schemaRetry || (typeof e.content === 'string' && e.content.startsWith('系统：上一份补丁里有'))));
+}
+// opts.previewOnly：换房 / 重载重画卡片时只补回预演块，绝不再发重写（minors M7）。
+async function diagSchemaAfterManualReply(assistantEl, finalText, aEntry, opts) {
+    try {
+        const Mvu = await getMvu();
+        if (!Mvu || typeof Mvu.getMvuData !== 'function') return;
+        const md = Mvu.getMvuData(mvuMsgOpts());
+        const block = extractUpdateBlock(finalText);
+        const sf = block ? diagSchemaFilterPatch(repairDiagPatch(block, diagStatOf(md)).text, md) : null;
+        const lines = sf ? diagSchemaDryLines(sf.dry) : '';
+        const bar = assistantEl && assistantEl.querySelector('.so-apply-bar');
+        if (lines && bar) {
+            const pv = document.createElement('div');
+            pv.className = 'so-hint so-diag-schema-preview';
+            pv.textContent = lines.replace(/^\n/, '');
+            bar.parentNode.insertBefore(pv, bar);
+        }
+        if (opts && opts.previewOnly) return;
+        const prev = convo[convo.indexOf(aEntry) - 1];
+        const already = diagSchemaIsRetryTurn(prev);
+        const plan = diagSchemaRetryPlan(finalText, md, getSettings(), already);
+        if (!plan) return;
+        // generateReply 还在收尾（isGenerating 仍为真）——等它落定再插话；用户已经接着聊了就不插。
+        await new Promise((res) => { const t = setInterval(() => { if (!isGenerating) { clearInterval(t); res(); } }, 100); });
+        if (convo[convo.length - 1] !== aEntry) return;
+        // 第二张在生成时先锁住第一张的「应用」，免得两张都点、同一处 delta 算两遍（minors M7）。只锁还是「应用」态的键。
+        const applyBtn = bar && bar.querySelector('.so-apply-btn');
+        const lockable = !!(applyBtn && !applyBtn.disabled && /将修复应用到状态/.test(applyBtn.textContent || ''));
+        if (lockable) applyBtn.disabled = true;
+        const entry = { id: ++cidSeq, role: 'user', content: plan.message, schemaRetry: true };
+        convo.push(entry);
+        persistConvo();
+        entry._el = addMessage('user', plan.message, entry);
+        try { await generateReply(); } catch (e) { /* 下面按「没有第二张」处理 */ }
+        // 真有了第二张（带补丁的回复）才标「已由下一张替代」并让第一张保持锁住；没有就把第一张还原（minors M7）。
+        const last = convo[convo.length - 1];
+        const replaced = !!(last && last !== entry && last.role === 'assistant' && extractUpdateBlock(String(last.content || '')));
+        if (replaced && bar) {
+            const n = document.createElement('div');
+            n.className = 'so-hint';
+            n.textContent = '已由下一张替代';
+            bar.parentNode.insertBefore(n, bar);
+        } else if (lockable) applyBtn.disabled = false;
+    } catch (e) {
+        console.warn('[Story Oracle] 🩺 schema 预演 / 重写失败（不影响应用）：', e);
+    }
+}
+
 // Apply / Undo bar appended to a diagnose reply that contains a corrective patch.
 // replyText（可选，第 4 参，1.68.0）= 这条诊断回复的【原文】，供双区块闸看清 MVU 会执行几块
 // （extractUpdateBlock 只摘最早那一个包装块）。换房重画 / 重载后的卡片拿不到原文 → 退化成只数补丁
@@ -31697,7 +34169,7 @@ function addApplyControls(assistantEl, patchBlock, entry, replyText) {
                 const n = diagUserFloorNotice();
                 status.textContent = ((r.report && r.report.applied < r.report.total)
                     ? `已应用（${r.report.total} 条指令中 ${r.report.applied} 条生效）。` + diagReportLines(r.report)
-                    : '已应用 —— 状态已更新。') + repairDiagNote(r.repair) + (n ? '\n' + n : '');
+                    : '已应用 —— 状态已更新。') + repairDiagNote(r.repair) + diagSchemaDryLines(r.schemaDry) + (n ? '\n' + n : '');
             }
         } catch (e) {
             status.textContent = '应用失败：' + (e?.message || e);
@@ -32384,6 +34856,7 @@ function addNoteMessage(entry, opts) {
     wrap.appendChild(txt);
     if (opts && opts.snapshot && opts.patch) addNoteUndoControls(wrap, opts);   // info 形状：{snapshot, applied, patch, writeBack, undone?}
     else if (opts && opts.fix) addAutoFixControls(wrap, opts.fix);
+    else if (opts && opts.health) addSaveHealthControls(wrap, opts.health);   // 🩺 1.89.0 存档检查：跳格按钮 + 技术细节
     else if (opts && opts.mvued) addMvuedUndoControls(wrap, opts.mvued);   // 🎛 手动编辑记录：整份快照互换的撤销
     else if (opts && opts.fullReply) addFullReplyControls(wrap, opts.fullReply);   // 1.71.1 unparsed 记录：查看完整回复
     messagesEl.appendChild(wrap);
@@ -32482,7 +34955,7 @@ function repaintHtmlForRoom(streamKey, content) {
     if (streamKey === 'advisor') return renderAdvisorReplyHtml(t);
     if (streamKey && String(streamKey).startsWith('bld_')) return renderBuilderReplyHtml(t);
     if (streamKey === 'diagnose' || streamKey === 'lorebook') return null;
-    if (streamKey === 'fix') return renderReplyHtml(t);
+    if (streamKey === 'fix') return renderFixResultHtml(t);
     return renderMarkdownOnly(t);   // main / 注册插件模式房：1.20.0 F5 补渲行为不变
 }
 // PURE：按房间算重画后该重挂哪些动作卡。参谋采纳卡 / 世界书应用控件从【字符串】可完整导出 →
@@ -32547,54 +35020,61 @@ function loadConvoForChat() {
     }
     // 保活修（1.36.0 :8001 smoke 抓到）：空房只画空态、【不得提前 return】——回房重挂在函数尾部，
     // 提前退出会漏挂正在后台流式的锻造/深度精简气泡（空房 + 在途保活 = 清过本房记录再开跑的场景）。
-    if (!convo.length) renderEmptyState();
-    for (const m of convo) {
-        // note 重画时凭注册表重挂本会话的按钮（自动诊断撤销 / 自动校正用原文——重载后注册表为空 = 只读记录，契约不变）
-        m._el = (m.role === 'note') ? addNoteMessage(m, peekNoteOpts(convoStreamKey, m)) : addMessage(m.role, m.content, m);
-        // Hook API / F5 补渲，1.33.1 起按房间分道（repaintHtmlForRoom）：恢复的 AI 回复用与定稿路径
-        // 同源的渲染器（参谋 StoryPlan 进 <pre>、诊断/世界书保持纯文本原样、校正走 ST 格式器、其余渲
-        // Markdown）+ 存 data-so-raw（供插件读自定义标签）。仅助手回复、仅尚未渲染时。
-        if (m.role === 'assistant' && m._el) {
-            const c = m._el.querySelector('.so-content');
-            if (c && !c.classList.contains('so-rendered')) {
-                c.dataset.soRaw = m.content || '';
-                const html = repaintHtmlForRoom(convoStreamKey, m.content || '');
-                if (html != null) { c.innerHTML = html; c.classList.add('so-rendered'); c.style.whiteSpace = 'normal'; }
+    // 1.85.3：整段重画走批量段——段内逐条 addMessage / addNoteMessage / 动作卡重挂都不再各滚一次（每次滚 = 读
+    // scrollHeight = 整页强制重排），历史气泡也不挂入场动画；段尾那一次 scrollToBottom 照旧。
+    soBulkRender(() => {
+        if (!convo.length) renderEmptyState();
+        for (const m of convo) {
+            // note 重画时凭注册表重挂本会话的按钮（自动诊断撤销 / 自动校正用原文——重载后注册表为空 = 只读记录，契约不变）
+            m._el = (m.role === 'note') ? addNoteMessage(m, peekNoteOpts(convoStreamKey, m)) : addMessage(m.role, m.content, m);
+            // Hook API / F5 补渲，1.33.1 起按房间分道（repaintHtmlForRoom）：恢复的 AI 回复用与定稿路径
+            // 同源的渲染器（参谋 StoryPlan 进 <pre>、诊断/世界书保持纯文本原样、校正走 ST 格式器、其余渲
+            // Markdown）+ 存 data-so-raw（供插件读自定义标签）。仅助手回复、仅尚未渲染时。
+            if (m.role === 'assistant' && m._el) {
+                const c = m._el.querySelector('.so-content');
+                if (c && !c.classList.contains('so-rendered')) {
+                    c.dataset.soRaw = m.content || '';
+                    const html = repaintHtmlForRoom(convoStreamKey, m.content || '');
+                    if (html != null) { c.innerHTML = html; c.classList.add('so-rendered'); c.style.whiteSpace = 'normal'; }
+                }
             }
         }
-    }
-    // 重画保真（1.33.1）：按房间重挂动作卡（重挂规则见 repaintControlPlan）。校正材料凭 id+内容
-    // 从会话注册表取（取不到 = 重载过 / 内容不符 → 记录保持只读，与 1.31.1 自动记录同一契约）。
-    for (const p of repaintControlPlan(convoStreamKey, convo)) {
-        const m = convo.find((x) => x.id === p.id);
-        if (!m || !m._el) continue;
-        if (p.kind === 'plans') addPlanControls(m._el, p.plans);
-        else if (p.kind === 'seqs') addSeqControls(m._el, p.seqs);
-        else if (p.kind === 'lorebook') addLorebookApplyControls(m._el, p.parsed, m);
-        else if (p.kind === 'diagPatch') addApplyControls(m._el, p.block, m);
-        else if (p.kind === 'fixApply') {
-            const fa = (peekNoteOpts(convoStreamKey, m) || {}).fixApply;
-            if (fa) rehangFixApply(m._el, fa, m);
+        // 重画保真（1.33.1）：按房间重挂动作卡（重挂规则见 repaintControlPlan）。校正材料凭 id+内容
+        // 从会话注册表取（取不到 = 重载过 / 内容不符 → 记录保持只读，与 1.31.1 自动记录同一契约）。
+        for (const p of repaintControlPlan(convoStreamKey, convo)) {
+            const m = convo.find((x) => x.id === p.id);
+            if (!m || !m._el) continue;
+            if (p.kind === 'plans') addPlanControls(m._el, p.plans);
+            else if (p.kind === 'seqs') addSeqControls(m._el, p.seqs);
+            else if (p.kind === 'lorebook') addLorebookApplyControls(m._el, p.parsed, m);
+            else if (p.kind === 'diagPatch') {
+                addApplyControls(m._el, p.block, m);
+                if (ENABLE_SCHEMA_DIAG) diagSchemaAfterManualReply(m._el, p.block, m, { previewOnly: true });   // 重画补回预演块，不重发
+            }
+            else if (p.kind === 'fixApply') {
+                const fa = (peekNoteOpts(convoStreamKey, m) || {}).fixApply;
+                if (fa) rehangFixApply(m._el, fa, m);
+            }
         }
-    }
-    // 保活回房重挂（锻造 / 深度精简同款）：切模式离开时保活运行在后台继续流式；回到原房且它仍在跑 →
-    // 重建一个流式气泡、接上累积文本（entry._el 重指向新气泡，paintForge 继续画到这里）。完成/失败的
-    // 落盘由各自 run 函数负责（按 originKey 归位），这里只恢复「正在流」的可见性；成稿后它已进 convo，
-    // 故 id 去重防重挂。
-    const liveRun = liveForge || liveCondense;
-    if (liveRun && liveRun.streamKey === convoStreamKey && liveRun.entry
-        && !convo.some((m) => m.id === liveRun.entry.id)) {
-        const el = addMessage('assistant', '', liveRun.entry);
-        liveRun.entry._el = el;
-        const c = el.querySelector('.so-content');
-        if (c) { c.classList.add('so-streaming'); c.textContent = liveRun.text || ''; }
-    }
-    // 📤 导入入口的兜底挂载 —— 条件是「这一房【没有 AI 气泡】」而不是「这一房是空的」。
-    // 因为 📥📤 只挂在 AI 气泡上（addMessage），所以【有消息但一条 AI 回复都没有】的房间同样够不着入口：
-    // 把唯一那条 AI 回复删掉就会掉进去（review 2026-08-09 抓到的可达性回归 —— 1.61.0 之前 ⋯ 菜单还兜得住）。
-    // 放在消息循环【之后】：这样它落在最后一条消息下面，而不是插在消息上头。
-    // 幂等 + 自带模式闸（见 appendConvoImportEntry），空房且空态已渲出来时这一次是 no-op。
-    if (!convo.some((m) => m.role === 'assistant')) appendConvoImportEntry(messagesEl);
+        // 保活回房重挂（锻造 / 深度精简同款）：切模式离开时保活运行在后台继续流式；回到原房且它仍在跑 →
+        // 重建一个流式气泡、接上累积文本（entry._el 重指向新气泡，paintForge 继续画到这里）。完成/失败的
+        // 落盘由各自 run 函数负责（按 originKey 归位），这里只恢复「正在流」的可见性；成稿后它已进 convo，
+        // 故 id 去重防重挂。
+        const liveRun = liveForge || liveCondense;
+        if (liveRun && liveRun.streamKey === convoStreamKey && liveRun.entry
+            && !convo.some((m) => m.id === liveRun.entry.id)) {
+            const el = addMessage('assistant', '', liveRun.entry);
+            liveRun.entry._el = el;
+            const c = el.querySelector('.so-content');
+            if (c) { c.classList.add('so-streaming'); c.textContent = liveRun.text || ''; }
+        }
+        // 📤 导入入口的兜底挂载 —— 条件是「这一房【没有 AI 气泡】」而不是「这一房是空的」。
+        // 因为 📥📤 只挂在 AI 气泡上（addMessage），所以【有消息但一条 AI 回复都没有】的房间同样够不着入口：
+        // 把唯一那条 AI 回复删掉就会掉进去（review 2026-08-09 抓到的可达性回归 —— 1.61.0 之前 ⋯ 菜单还兜得住）。
+        // 放在消息循环【之后】：这样它落在最后一条消息下面，而不是插在消息上头。
+        // 幂等 + 自带模式闸（见 appendConvoImportEntry），空房且空态已渲出来时这一次是 no-op。
+        if (!convo.some((m) => m.role === 'assistant')) appendConvoImportEntry(messagesEl);
+    });
     scrollToBottom();
 }
 
@@ -32959,11 +35439,22 @@ function updateSummaryIndicator(text) {
 // soProgScroll 标记「我们自己触发的滚动」，避免被 scroll 监听器误当成用户操作。
 let soFollowStream = false;
 let soProgScroll = false;
+// 1.85.3 批量重画（开窗卡顿调查 2026-09-24）：整页重画（loadConvoForChat / 工坊桥接导入）逐条 addMessage 时，
+// 每条都 scrollToBottom = 读一次 scrollHeight = 整页强制样式+布局（200 轮 13s → 去掉后 0.6s）。
+// soBulkRender(fn) 只包【同步】的批量段：段内 scrollToBottom / scrollBubbleToTop 静默不滚、新气泡不挂入场动画，
+// 段尾由调用方照旧滚一次。深度计数 + finally 归零，抛错也不会漏成全局静默；流式回调是异步的，
+// 不可能落在同步段内，所以直播路径（发送 / 流式 / 定稿 / 后台记录）一律照旧。
+let soBulkRenderDepth = 0;
+function soBulkRender(fn) {
+    soBulkRenderDepth++;
+    try { return fn(); } finally { soBulkRenderDepth--; }
+}
 function nearBottom() {
     return messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 40;
 }
 function scrollToBottom() {
     if (!messagesEl) return;   // 窗口还没建好（极早期 / 单测里直接调控件函数）——没有可滚的容器就什么都不做
+    if (soBulkRenderDepth > 0) return;   // 1.85.3 批量重画段内不逐条滚（段尾统一滚一次）
     soProgScroll = true;
     messagesEl.scrollTop = messagesEl.scrollHeight;
     try { requestAnimationFrame(() => { soProgScroll = false; }); } catch (e) { soProgScroll = false; }
@@ -32971,6 +35462,7 @@ function scrollToBottom() {
 // 把某条气泡的顶部对到消息区顶部（留 6px），让流式回复从开头开始读。
 function scrollBubbleToTop(el) {
     if (!el) return;
+    if (soBulkRenderDepth > 0) return;   // 1.85.3 批量重画段内不滚（段尾的 scrollToBottom 反正会覆盖它）
     soProgScroll = true;
     const cRect = messagesEl.getBoundingClientRect();
     const eRect = el.getBoundingClientRect();

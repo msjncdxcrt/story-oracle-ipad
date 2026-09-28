@@ -329,6 +329,10 @@
     align-items: flex-start;
     gap: 9px;
     max-width: 100%;
+}
+/* 1.85.3：入场淡入只给直播新到的气泡（JS 在 addMessage 非批量时挂 .so-msg-new、放完即摘）。
+   挂在 .so-msg 本体上时，每次开窗 display:none→flex 都会让几百条历史一起重播。 */
+.so-msg.so-msg-new {
     animation: so-msg-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .so-user { flex-direction: row-reverse; }
@@ -2722,13 +2726,14 @@ body.so-skin-light .so-cur-disabled {
 .so-lb-mini-magic { color: var(--so-lb-accent); font-weight: 600; }
 .so-lb-mini-magic:hover { background: color-mix(in srgb, var(--so-lb-accent) 22%, transparent); }
 
-/* overlay 骨架：同 #so-fixsel（inset:0 覆盖 #so-window、居中、遮罩 + 模糊）——恒可达逃生（✕ + 点遮罩关闭）。 */
-#so-smartsel {
+/* overlay 骨架：同 #so-fixsel（inset:0 覆盖 #so-window、居中、遮罩 + 模糊）——恒可达逃生（✕ + 点遮罩关闭）。
+   🌐 模板广场的两张卡（#so-fixhub / #so-fixshare，1.86.0）逐字同一骨架，并进这一条（遮罩只引用一次 --so-scrim）。 */
+#so-smartsel, #so-fixhub, #so-fixshare {
     display: none; position: absolute; inset: 0; z-index: 60;
     align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;
     background: var(--so-scrim); backdrop-filter: blur(4px);
 }
-#so-smartsel.open { display: flex; }
+#so-smartsel.open, #so-fixhub.open, #so-fixshare.open { display: flex; }
 /* 卡片跟随主题（工作卡语义，非警告卡）：底色/边框/字色都走主题变量——绝不钉死浅色低对比（1.45.0 教训）。 */
 #so-smartsel-card {
     display: flex; flex-direction: column; width: 100%; max-width: 560px; max-height: 100%; min-height: 0;
@@ -2791,6 +2796,146 @@ body.so-skin-light .so-cur-disabled {
     font-size: 0.82em; line-height: 1.5; font-family: var(--monoFontFamily, monospace);
     white-space: pre-wrap; word-break: break-word; opacity: 0.85; overscroll-behavior: contain;
 }
+
+/* ==================== 🌐 模板广场（ENABLE_FIX_TEMPLATE_HUB，1.86.0）==================== */
+/* overlay 骨架（#so-fixhub / #so-fixshare）并在上面 #so-smartsel 那一条里；这里只写卡片本身。工作卡语义，跟随主题——绝不钉死浅色。 */
+#so-fixhub-card {
+    display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 560px; max-height: 100%; min-height: 0;
+    box-sizing: border-box; border-radius: 12px; border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18));
+    background-color: var(--SmartThemeBlurTintColor, #1b1d23);
+    backdrop-filter: blur(calc(var(--SmartThemeBlurStrength, 10px) + 4px));
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.7); padding: 16px 18px;
+    color: var(--SmartThemeBodyColor, #e6e6e6);
+}
+#so-fixhub-head { font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: 0 0 auto; }   /* 含逃生 ✕，不被压缩 */
+.so-fixhub-headbtns { display: flex; gap: 4px; }
+#so-fixhub-search {
+    width: 100%; box-sizing: border-box; border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 0.9em;
+    background: var(--so-field); color: var(--SmartThemeBodyColor, #e6e6e6);
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18)); flex: 0 0 auto;
+}
+#so-fixhub-tags { display: flex; flex-wrap: wrap; gap: 6px; flex: 0 0 auto; }
+.so-fixhub-chip {
+    padding: 3px 10px; border-radius: 999px; font-size: 0.82em; cursor: pointer;
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.2)); background: rgba(var(--so-ink), 0.06); color: inherit;
+}
+.so-fixhub-chip.so-on { background: var(--so-lb-accent); color: #1a1a1a; border-color: transparent; font-weight: 600; }
+#so-fixhub-status:empty { display: none; }
+#so-fixhub-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+.so-fixhub-item { border: 1px solid rgba(var(--so-ink), 0.12); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; }
+.so-fixhub-item-head { display: flex; justify-content: space-between; gap: 8px; min-width: 0; }
+.so-fixhub-name { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.so-fixhub-meta, .so-fixhub-tagline { font-size: 0.8em; opacity: 0.75; overflow-wrap: anywhere; }
+.so-fixhub-meta { flex: 0 1 auto; text-align: right; }
+.so-fixhub-desc { font-size: 0.88em; overflow-wrap: anywhere; }
+.so-fixhub-item-btns, .so-fixhub-confirm { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; align-items: center; }
+.so-fixhub-confirm-q { font-size: 0.85em; margin-right: auto; }
+.so-fixhub-btn {
+    padding: 5px 12px; border-radius: 8px; font-size: 0.84em; cursor: pointer; max-width: 100%; overflow-wrap: anywhere;
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.2)); background: rgba(var(--so-ink), 0.06); color: inherit;
+}
+.so-fixhub-btn:hover:not(:disabled) { background: rgba(var(--so-ink), 0.12); }
+.so-fixhub-btn:disabled { opacity: 0.55; cursor: default; }
+.so-fixhub-update { border-color: var(--so-lb-accent); }
+.so-fixhub-prompt {
+    white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.82em; max-height: 30vh; overflow-y: auto; margin: 0;
+    padding: 6px 8px; border-radius: 6px; background: var(--so-field); overscroll-behavior: contain;
+}
+#so-fixhub-foot { flex: 0 0 auto; }
+
+/* 📤 分享卡：骨架同上（并在 #so-smartsel 那一条里）。hidden 属性必须压过 .so-lb-check 等类的 display:flex，
+   否则「更新」勾选行 / 提交按钮 / 复制兜底框永远可见（同 #so-wi-custom[hidden] 的教训）。 */
+#so-fixshare [hidden] { display: none; }
+#so-fixshare-card {
+    display: flex; flex-direction: column; width: 100%; max-width: 560px; max-height: 100%; min-height: 0;
+    box-sizing: border-box; border-radius: 12px; border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18));
+    background-color: var(--SmartThemeBlurTintColor, #1b1d23);
+    backdrop-filter: blur(calc(var(--SmartThemeBlurStrength, 10px) + 4px));
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.7); padding: 16px 18px;
+    color: var(--SmartThemeBodyColor, #e6e6e6);
+}
+#so-fixshare-head { font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex: 0 0 auto; }   /* 含逃生 ✕ */
+#so-fixshare-body { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+#so-fixshare-body input[type="text"], #so-fixshare-body textarea, #so-fixshare-body select {
+    width: 100%; box-sizing: border-box; border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 0.9em;
+    background: var(--so-field); color: var(--SmartThemeBodyColor, #e6e6e6);
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.18)); flex: 0 0 auto;
+}
+#so-fixshare-body textarea { resize: vertical; }
+.so-fixshare-label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85em; }
+#so-fixshare-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.so-fixshare-errors { white-space: pre-wrap; opacity: 1; color: color-mix(in srgb, var(--crimson70a, #e07c7c) 82%, var(--SmartThemeBodyColor)); }
+#so-fixshare-btns { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 12px; flex: 0 0 auto; }
+/* 写成 .so-fixhub-btn.so-fixshare-go（0,3,0）且排在 .so-fixhub-btn:hover:not(:disabled) 之后：否则悬停时底色被换回半透明灰、
+   字仍是 #1a1a1a → 暗皮上深底深字几乎看不见（Task 8 :8003 眼检实测）。悬停只提一点亮度。 */
+.so-fixhub-btn.so-fixshare-go:not(:disabled) { background: var(--so-lb-accent); border-color: transparent; color: #1a1a1a; font-weight: 600; }
+.so-fixhub-btn.so-fixshare-go:not(:disabled):hover { filter: brightness(1.08); }
+
+/* ==================== 🧭 下一拍建议（ENABLE_NEXT_BEAT，1.87.0）==================== */
+/* 设置：参谋条「参谋设置」组里的折叠子块（在 #so-window 里，走神谕皮肤变量）。 */
+.so-adv-nbeat-more { font-size: 0.82em; }
+.so-adv-nbeat-more > summary { cursor: pointer; opacity: 0.72; padding: 2px 0; user-select: none; }
+.so-adv-nbeat-more > summary:hover { opacity: 1; }
+.so-adv-nbeat-body { display: flex; flex-direction: column; gap: 8px; padding: 6px 0 2px 10px; border-left: 2px solid rgba(128, 128, 128, 0.25); margin-top: 4px; }
+.so-adv-nbeat-body .so-adv-check,
+.so-adv-nbeat-body .so-adv-field { font-size: 1em; }
+.so-adv-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--SmartThemeBodyColor, #e6e6e6);
+    background-color: var(--so-field);
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.16));
+    border-radius: 8px;
+    padding: 6px 9px;
+    font-family: inherit;
+    line-height: 1.4;
+    resize: vertical;
+}
+.so-adv-nbeat-btns { display: flex; gap: 6px; justify-content: flex-end; }
+/* 卡片：挂在【主聊天】最新 AI 回复的 .mes_text 之后——那里是酒馆的地盘，跟随酒馆主题（SmartTheme 变量），不跟神谕窗口皮肤。
+   前缀 so-nbeat- 刻意避开独立版插件的 so-next-beat- / so-nb-，两者同装也不串样式。 */
+.so-nbeat-chip {
+    margin: 6px 0 4px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px dashed rgba(128, 128, 128, 0.55);
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: var(--SmartThemeBodyColor, #e6e6e6);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 100%;
+    user-select: none;
+}
+.so-nbeat-chip[data-state="error"] { border-style: solid; border-color: rgba(220, 90, 90, 0.7); background: rgba(220, 90, 90, 0.06); }
+.so-nbeat-head { font-size: 0.82em; font-weight: 600; opacity: 0.75; }
+.so-nbeat-goal { font-size: 0.85em; opacity: 0.8; padding: 3px 8px; border-radius: 6px; background: rgba(74, 144, 217, 0.12); word-break: break-word; }
+.so-nbeat-list { display: flex; flex-direction: column; gap: 3px; }
+.so-nbeat-opt { display: flex; align-items: flex-start; gap: 6px; padding: 4px 6px; border-radius: 6px; cursor: pointer; transition: background-color 0.12s ease; }
+.so-nbeat-opt:hover, .so-nbeat-opt:focus-visible { background-color: rgba(128, 128, 128, 0.16); outline: none; }
+.so-nbeat-tag { flex: 0 0 auto; font-size: 0.82em; font-weight: 600; padding: 1px 6px; border-radius: 4px; white-space: nowrap; margin-top: 2px; }
+.so-nbeat-tag-user { background: rgba(74, 144, 217, 0.24); }
+.so-nbeat-tag-role { background: rgba(160, 100, 220, 0.24); }
+.so-nbeat-tag-time { background: rgba(128, 128, 128, 0.24); }
+.so-nbeat-text { flex: 1 1 auto; min-width: 0; word-break: break-word; white-space: pre-wrap; user-select: text; }
+.so-nbeat-foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.so-nbeat-busy { font-size: 0.85em; opacity: 0.75; }
+.so-nbeat-btn {
+    border: 1px solid rgba(74, 144, 217, 0.7);
+    background: rgba(74, 144, 217, 0.16);
+    color: var(--SmartThemeBodyColor, #e6e6e6);
+    border-radius: 6px;
+    padding: 3px 12px;
+    font-size: 0.85em;
+    cursor: pointer;
+}
+.so-nbeat-btn:hover { background: rgba(74, 144, 217, 0.3); }
+.so-nbeat-btn-minor { border-color: rgba(128, 128, 128, 0.5); background: transparent; }
+.so-nbeat-btn-minor:hover { background: rgba(128, 128, 128, 0.14); }
+.so-nbeat-err { font-size: 0.85em; padding: 5px 8px; border-radius: 6px; background: rgba(220, 90, 90, 0.08); word-break: break-word; }
+.so-nbeat-err-title { font-weight: 600; color: color-mix(in srgb, var(--crimson70a, #e07c7c) 82%, var(--SmartThemeBodyColor)); }
+.so-nbeat-err-detail { opacity: 0.85; white-space: pre-wrap; user-select: text; }
 
 /* ==================== 🎛 变量编辑器（ENABLE_MVU_EDITOR，2026-08-08）==================== */
 /* 诊断房间里的入口按钮：同 .so-lb-mini 家族（#so-diag-bar 已把 --so-lb-accent 换成诊断红，自动同色）。
@@ -2903,6 +3048,17 @@ body.so-skin-light .so-cur-disabled {
 /* .so-lb-mini.active 这套共享语言只改 background / border-color，默认假设没有变暗基线——
    这颗 chip 偏偏有（上面那行 .55），不补这条「已冻结」会跟未冻结一样暗，看不出正生效。 */
 .so-mvued-lock.active { opacity: 1; }
+/* 🗑 删除（1.88.0）：平时同 🔒 一样压暗、不抢眼；待删行 = 名字划线 + 变淡，↩ 保持全亮（它是这一行
+   唯一还能点的东西）。只动 opacity / text-decoration——不钉任何颜色，明暗两皮都跟主题走（1.45.0 教训）。
+   组标题里名字包进了 .so-mvued-grouplabel，才能只划名字、不连 ↩ 一起划。 */
+.so-mvued-rm { opacity: .55; }
+.so-mvued-rm:hover { opacity: 1; }
+.so-mvued-group > summary .so-mvued-rm, .so-mvued-list > .so-mvued-label .so-mvued-rm { margin-left: 6px; font-weight: normal; }
+.so-mvued-removed > summary .so-mvued-grouplabel,
+.so-mvued-removed > .so-mvued-label { text-decoration: line-through; opacity: .5; }
+.so-mvued-removed .so-mvued-rm { opacity: 1; }
+/* 🩺 1.89.0：补丁卡上「这张卡不会接受」的预演说明。white-space 保留逐行列表；不钉颜色，跟随 .so-hint。 */
+.so-diag-schema-preview { white-space: pre-line; margin: 4px 0; }
 .so-mvued-rule-tag {
     font-size: .78em;
     opacity: .75;
@@ -3030,3 +3186,6 @@ body.so-skin-light .so-cur-disabled {
     color: var(--SmartThemeBodyColor, #e6e6e6);
 }
 .so-z2-block .so-apply-btn:hover:not(:disabled) { background: rgba(var(--so-ink), 0.14); filter: none; }
+
+/* 🩺 1.89.0：从存档检查跳到某一格时闪 2 秒（复用脏行的左缘强调色，明暗两皮都可见；不钉颜色）。 */
+.so-mvued-flash { box-shadow: inset 3px 0 0 var(--SmartThemeQuoteColor), 0 0 0 2px var(--SmartThemeQuoteColor); border-radius: 4px; }
